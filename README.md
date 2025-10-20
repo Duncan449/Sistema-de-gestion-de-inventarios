@@ -109,16 +109,15 @@ Se recomienda hacer siempre un git fetch antes de un git pull y también antes d
 ---
 
 ## FLUJO NORMAL QUE SIGO PARA HACER UN CRUD 
-0)  **Crear la tabla en la BD de Neon**
+0)  **Crear la tabla en la BD**
 1)  **Crear en "Schemas" un archivo "nombre.py" con los modelos Pydantic (Create - Update - Out)**
-2)  **Crear en "models" un archivo "nombre.py" o "nombreModel.py" con el modelo del ORM**
-3)  **Ir a "Controllers" y crear un archivo "nombreControllers.py" con cada una de las funciones que se encargaran del CRUD**
-4)  **Crear en "routes" un archivo "nombreRoutes.py" con cada uno de los endpoints que consumen las funciones del controlador**
-5)  **Agregar las rutas en el main.py**
-6)  **Probar los endpoints con Postman o la documentación automática de FastAPI**
+2)  **Ir a "Services" y crear un archivo "nombreServices.py" con cada una de las funciones que se encargaran del CRUD**
+3)  **Crear en "routes" un archivo "nombreRoutes.py" con cada uno de los endpoints que consumen las funciones del controlador**
+4)  **Agregar las rutas en el main.py**
+5)  **Probar los endpoints con Postman o la documentación automática de FastAPI**
 
 **ACLARACIONES:** 
-* Puede que a futuro cambiemos la carpeta "Controllers" a "Services" y en Controllers debamos hacer validaciones y otras cosas. Luego lo vemos.
+* Puede que a futuro cambiemos debamos separar Service en Service y Controllers. HAY QUE PREGUNTARLE AL PROFE.
 * No se olviden de comentar el código, siempre que vean algo que no entiendan o descubran algo nuevo dejenlo ahí documentado.
 * SIEMPRE AVISAR CUANDO ESTÉN POR HACER UN PUSH Y SIEMPRE VERIFICAR SI ESTÁN AL DÍA CON EL REPOSITORIO REMOTO
 * No se olviden de crear el archivo .env y agregar los datos que le competen, ya que eso no se exporta al github.
