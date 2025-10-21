@@ -38,4 +38,4 @@ async def root():
 
 
 app.include_router(usuarioRoutes.router, prefix="/usuarios", tags=["Usuarios"])
-app.include_router(almacenRoutes.router, prefix="/almacenes", tags=["almacenes"])
+app.include_router(almacenRoutes.router, prefix="/almacenes", tags=["Almacenes"])

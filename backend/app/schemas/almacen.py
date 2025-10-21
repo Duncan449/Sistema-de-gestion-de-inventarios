@@ -7,8 +7,6 @@ class AlmacenIn(BaseModel):
     ubicacion: str
     capacidad_maxima: int
     activo: bool = True
-    fecha_creacion: datetime | None = None
-
 
 class AlmacenOut(BaseModel):
     id: int
@@ -17,3 +15,8 @@ class AlmacenOut(BaseModel):
     capacidad_maxima: int
     activo: bool = True
     fecha_creacion: datetime | None = None
+
+    class Config:
+        json_encoders = {
+            datetime: lambda v: v.strftime("%d/%m/%Y %H:%M:%S") if v else None
+        }

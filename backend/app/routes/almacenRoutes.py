@@ -7,7 +7,7 @@ router = APIRouter()
 
 @router.get("/", response_model=List[AlmacenOut])
 async def read_almacen():
-    return await service.get_all_almacen()
+    return await service.get_all_almacenes()
 
 
 @router.get("/{id}", response_model=AlmacenOut)
