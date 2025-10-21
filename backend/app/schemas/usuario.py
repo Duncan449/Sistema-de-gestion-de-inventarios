@@ -8,8 +8,6 @@ class UsuarioIn(BaseModel):
     password_hash: str
     rol: str
     activo: bool = True
-    fecha_creacion: datetime | None = None
-    fecha_ultima_sesion: datetime | None = None
 
 
 class UsuarioOut(BaseModel):
@@ -21,3 +19,8 @@ class UsuarioOut(BaseModel):
     activo: bool = True
     fecha_creacion: datetime | None = None
     fecha_ultima_sesion: datetime | None = None
+
+    class Config:
+        json_encoders = {
+            datetime: lambda v: v.strftime("%d/%m/%Y %H:%M:%S") if v else None
+        }
