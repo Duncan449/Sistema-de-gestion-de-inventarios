@@ -1,6 +1,6 @@
 # backend/app/services/proveedor.py
 from typing import List
-from fastapi import HTTPException, status
+from fastapi import HTTPException
 from app.config.database import db
 from app.schemas.proveedor import ProveedorIn, ProveedorOut
 
@@ -166,10 +166,7 @@ async def create_proveedor(proveedor: ProveedorIn) -> ProveedorOut:
         }
 
         last_record_id = await db.execute(query=query, values=values)
-        return {
-            "id": last_record_id,
-            **values,
-        }
+        return await get_proveedor_by_id(last_record_id)
 
     except HTTPException:
         raise
@@ -260,7 +257,7 @@ async def update_proveedor(proveedor_id: int, proveedor: ProveedorIn) -> Proveed
         }
 
         await db.execute(query=query, values=values)
-        return {**values}
+        return await get_proveedor_by_id(proveedor_id)
 
     except HTTPException:
         raise
