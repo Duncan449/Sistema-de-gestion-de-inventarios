@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from app.config.database import db
 from app.routes import usuarioRoutes
 from fastapi.middleware.cors import CORSMiddleware
+from app.routes import usuarioRoutes, proveedorRoutes
 
 app = FastAPI()
 
@@ -38,3 +39,4 @@ async def root():
 
 
 app.include_router(usuarioRoutes.router, prefix="/usuarios", tags=["Usuarios"])
+app.include_router(proveedorRoutes.router, prefix="/proveedores", tags=["Proveedores"])
