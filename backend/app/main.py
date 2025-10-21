@@ -38,5 +38,5 @@ async def root():
     return {"message": "Bienvenidos a nuestro Sistema de gestión de inventario"}
 
 
-app.include_router(usuarioRoutes.router, prefix="/clientes", tags=["Egresos"])
+app.include_router(usuarioRoutes.router, prefix="/usuarios", tags=["Usuarios"])
 app.include_router(proveedorRoutes.router, prefix="/proveedores", tags=["Proveedores"])

@@ -6,7 +6,10 @@ import app.services.usuario as service
 router = APIRouter()
 
 
-@router.get("/", response_model=List[UsuarioOut])
+@router.get(
+    "/",
+    response_model=List[UsuarioOut],
+)
 async def read_usuarios():
     return await service.get_all_usuarios()
 
