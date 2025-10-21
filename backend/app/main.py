@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from app.config.database import db
-from app.routes import usuarioRoutes
+from app.routes import usuarioRoutes, almacenRoutes
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
@@ -37,4 +37,5 @@ async def root():
     return {"message": "Bienvenidos a nuestro Sistema de gestión de inventario"}
 
 
-app.include_router(usuarioRoutes.router, prefix="/clientes", tags=["Egresos"])
+app.include_router(usuarioRoutes.router, prefix="/usuarios", tags=["usuarios"])
+app.include_router(almacenRoutes.router, prefix="/almacenes", tags=["almacenes"])
