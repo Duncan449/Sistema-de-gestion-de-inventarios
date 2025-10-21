@@ -35,46 +35,57 @@ async def create_usuario(usuario: UsuarioIn) -> UsuarioOut:  # POST - Crea un us
             status_code=400, detail=f"El email {usuario.email} ya está registrado"
         )
 
-    query = """
-        INSERT INTO usuarios (nombre, email, password_hash, rol, activo)
-        VALUES (:nombre, :email, :password_hash, :rol, :activo)
+    try:
+        query = """
+            INSERT INTO usuarios (nombre, email, password_hash, rol, activo)
+            VALUES (:nombre, :email, :password_hash, :rol, :activo)
+        """
+        last_record_id = await db.execute(query=query, values=usuario.dict())
+        return await get_usuario_by_id(last_record_id)
 
-    """
-    last_record_id = await db.execute(query=query, values=usuario.dict())
-    return await get_usuario_by_id(last_record_id)
+    except Exception as e:
+        print(f"Error al crear usuario: {e}")
+        raise HTTPException(
+            status_code=500, detail="Error al crear el usuario. Intente nuevamente."
+        )
 
 
 async def update_usuario(
     usuario_id: int, usuario: UsuarioIn
 ) -> UsuarioOut:  # PUT - Modifica el usuario con el id indicado
     revision_query = "SELECT id FROM usuarios WHERE id = :id"  # Verificación de que el usuario exista
-    existing = await db.fetch_one(revision_query, values={"id": usuario_id})
-    if not existing:
+    existe = await db.fetch_one(revision_query, values={"id": usuario_id})
+    if not existe:
         raise HTTPException(
             status_code=404, detail=f"Usuario con id {usuario_id} no encontrado"
         )
 
     email_query = "SELECT id FROM usuarios WHERE email = :email AND id != :id"  # Verificación de que el nuevo email no esté ya en uso
-    email_exists = await db.fetch_one(
+    email_existe = await db.fetch_one(
         email_query, values={"email": usuario.email, "id": usuario_id}
     )
-    if email_exists:
+    if email_existe:
         raise HTTPException(
             status_code=400, detail=f"El email {usuario.email} ya está en uso"
         )
 
-    query = """
-        UPDATE usuarios
-        SET nombre = :nombre,
-            email = :email,
-            password_hash = :password_hash,
-            rol = :rol,
-            activo = :activo
-        WHERE id = :id
-    """
-    values = {**usuario.dict(), "id": usuario_id}
-    await db.execute(query=query, values=values)
-    return await get_usuario_by_id(usuario_id)
+    try:
+        query = """
+            UPDATE usuarios
+            SET nombre = :nombre,
+                email = :email,
+                password_hash = :password_hash,
+                rol = :rol,
+                activo = :activo
+            WHERE id = :id
+        """
+        values = {**usuario.dict(), "id": usuario_id}
+        await db.execute(query=query, values=values)
+        return await get_usuario_by_id(usuario_id)
+
+    except Exception as e:
+        print(f"Error al actualizar usuario: {e}")
+        raise HTTPException(status_code=500, detail="Error al actualizar el usuario")
 
 
 async def delete_usuario(
@@ -89,8 +100,11 @@ async def delete_usuario(
             status_code=404, detail=f"Usuario con id {id} no encontrado"
         )
 
-    # Tu código actual...
-    query = "DELETE FROM usuarios WHERE id = :id"
-    await db.execute(query=query, values={"id": id})
+    try:
+        query = "DELETE FROM usuarios WHERE id = :id"
+        await db.execute(query=query, values={"id": id})
+        return {"message": f"Usuario con id {id} eliminado correctamente"}
 
-    return {"message": f"Usuario con id {id} eliminado correctamente"}
+    except Exception as e:
+        print(f"Error al eliminar usuario: {e}")
+        raise HTTPException(status_code=400, detail="Error al eliminar el usuario")
