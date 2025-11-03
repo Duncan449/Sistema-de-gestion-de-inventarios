@@ -6,7 +6,8 @@ from app.routes import (
     proveedorRoutes,
     almacenRoutes,
     productoRoutes,
-    stock_almacenRoutes
+    stock_almacenRoutes,
+     movimiento_inventarioRoutes,
 )
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -50,3 +51,4 @@ app.include_router(categoriaRoutes.router, prefix="/categorias", tags=["Categori
 app.include_router(almacenRoutes.router, prefix="/almacenes", tags=["Almacenes"])
 app.include_router(productoRoutes.router, prefix="/productos", tags=["Productos"])
 app.include_router(stock_almacenRoutes.router, prefix="/stock_almacen", tags=["Stock"])
+app.include_router(movimiento_inventarioRoutes.router, prefix="/movimientos", tags=["Movimientos Inventario"])
