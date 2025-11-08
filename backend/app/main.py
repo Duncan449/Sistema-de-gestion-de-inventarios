@@ -7,7 +7,8 @@ from app.routes import (
     almacenRoutes,
     productoRoutes,
     stock_almacenRoutes,
-     movimiento_inventarioRoutes,
+    movimiento_inventarioRoutes,
+    authRoutes,
 )
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -21,6 +22,7 @@ origins = [
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
+    allow_credentials=True,  # Importante para JWT
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -45,10 +47,15 @@ async def root():
     return {"message": "Bienvenidos a nuestro Sistema de gestión de inventario"}
 
 
+app.include_router(authRoutes.router, prefix="/auth", tags=["Autenticación"])
 app.include_router(usuarioRoutes.router, prefix="/usuarios", tags=["Usuarios"])
 app.include_router(proveedorRoutes.router, prefix="/proveedores", tags=["Proveedores"])
 app.include_router(categoriaRoutes.router, prefix="/categorias", tags=["Categorias"])
 app.include_router(almacenRoutes.router, prefix="/almacenes", tags=["Almacenes"])
 app.include_router(productoRoutes.router, prefix="/productos", tags=["Productos"])
 app.include_router(stock_almacenRoutes.router, prefix="/stock_almacen", tags=["Stock"])
-app.include_router(movimiento_inventarioRoutes.router, prefix="/movimientos", tags=["Movimientos Inventario"])
+app.include_router(
+    movimiento_inventarioRoutes.router,
+    prefix="/movimientos",
+    tags=["Movimientos Inventario"],
+)

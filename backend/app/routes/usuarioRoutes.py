@@ -1,7 +1,8 @@
 from typing import List
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from app.schemas.usuario import UsuarioIn, UsuarioOut
 import app.services.usuario as service
+from app.services.auth import require_auth
 
 router = APIRouter()
 
@@ -10,25 +11,27 @@ router = APIRouter()
     "/",
     response_model=List[UsuarioOut],
 )
-async def read_usuarios():
+async def read_usuarios(usuario_actual=Depends(require_auth)):
     return await service.get_all_usuarios()
 
 
 @router.get("/{id}", response_model=UsuarioOut)
-async def read_usuario(id: int):
+async def read_usuario(id: int, usuario_actual=Depends(require_auth)):
     return await service.get_usuario_by_id(id)
 
 
 @router.post("/", response_model=UsuarioOut)
-async def create_usuario(usuario: UsuarioIn):
+async def create_usuario(usuario: UsuarioIn, usuario_actual=Depends(require_auth)):
     return await service.create_usuario(usuario)
 
 
 @router.put("/{id}", response_model=UsuarioOut)
-async def update_usuario(id: int, usuario: UsuarioIn):
+async def update_usuario(
+    id: int, usuario: UsuarioIn, usuario_actual=Depends(require_auth)
+):
     return await service.update_usuario(id, usuario)
 
 
 @router.delete("/{id}")
-async def delete_usuario(id: int):
+async def delete_usuario(id: int, usuario_actual=Depends(require_auth)):
     return await service.delete_usuario(id)

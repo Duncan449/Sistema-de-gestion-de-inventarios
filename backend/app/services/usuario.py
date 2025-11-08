@@ -1,7 +1,7 @@
 from typing import List
 from fastapi import HTTPException
 from app.config.database import db
-from app.schemas.usuario import UsuarioIn, UsuarioOut
+from app.schemas.usuario import UsuarioIn, UsuarioOut, UsuarioUpdate
 
 # CRUD USUARIOS
 
@@ -51,7 +51,7 @@ async def create_usuario(usuario: UsuarioIn) -> UsuarioOut:  # POST - Crea un us
 
 
 async def update_usuario(
-    usuario_id: int, usuario: UsuarioIn
+    usuario_id: int, usuario: UsuarioUpdate
 ) -> UsuarioOut:  # PUT - Modifica el usuario con el id indicado
     revision_query = "SELECT id FROM usuarios WHERE id = :id"  # Verificación de que el usuario exista
     existe = await db.fetch_one(revision_query, values={"id": usuario_id})
@@ -74,9 +74,7 @@ async def update_usuario(
             UPDATE usuarios
             SET nombre = :nombre,
                 email = :email,
-                password_hash = :password_hash,
                 rol = :rol,
-                activo = :activo
             WHERE id = :id
         """
         values = {**usuario.dict(), "id": usuario_id}
