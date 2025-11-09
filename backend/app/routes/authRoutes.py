@@ -1,0 +1,22 @@
+from typing import Annotated
+from fastapi import APIRouter, Depends
+from app.schemas.auth import Token, UsuarioLogin
+from app.schemas.usuario import UsuarioIn, UsuarioOut
+import app.services.auth as service
+from fastapi.security import OAuth2PasswordRequestForm
+
+router = APIRouter()
+
+
+@router.post("/login", response_model=Token)
+async def login(form_data: OAuth2PasswordRequestForm = Depends()) -> Token:
+    return await service.login_usuario(form_data.username, form_data.password)
+
+
+@router.post(
+    "/registro", response_model=UsuarioOut
+)  # POST - Registrar un nuevo usuario
+async def registro(usuario: UsuarioIn) -> UsuarioOut:
+    return await service.registrar_usuario(
+        usuario.nombre, usuario.email, usuario.password, usuario.rol
+    )

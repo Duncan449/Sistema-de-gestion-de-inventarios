@@ -1,30 +1,59 @@
 from typing import List
 from fastapi import HTTPException
 from app.config.database import db
-from app.schemas.usuario import UsuarioIn, UsuarioOut
+from app.schemas.usuario import UsuarioIn, UsuarioOut, UsuarioUpdate
 
 # CRUD USUARIOS
 
 
-async def get_all_usuarios() -> (
+async def get_all_usuarios(usuario_actual) -> (
     List[UsuarioOut]
-):  # GET - Trae a todos los usuarios de la BD
-    query = "SELECT * FROM usuarios"
-    rows = await db.fetch_all(query=query)
-    return rows
+):  # GET - Trae a todos los usuarios visibles de la BD
+    if usuario_actual["rol"] != "admin":
+        raise HTTPException(status_code=403, detail="No tienes permiso para ver los usuarios")
+
+    try:
+        query = "SELECT * FROM usuarios WHERE activo = true"
+        rows = await db.fetch_all(query=query)
+        return rows
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al obtener usuarios: {e}")
+    
+async def get_all_usuarios_borrados(usuario_actual) -> (
+    List[UsuarioOut]
+):  # GET - Trae a todos los usuarios borrados de la BD
+    if usuario_actual["rol"] != "admin":
+        raise HTTPException(status_code=403, detail="No tienes permiso para ver los usuarios borrados")
+
+    try:
+        query = "SELECT * FROM usuarios WHERE activo = false"
+        rows = await db.fetch_all(query=query)
+        return rows
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al obtener usuarios borrados: {e}")
 
 
 async def get_usuario_by_id(
-    id: int,
+    id: int, usuario_actual
 ) -> UsuarioOut:  # GET - Trae al usuario con el id indicado
-    query = "SELECT * FROM usuarios WHERE id = :id"
-    row = await db.fetch_one(query=query, values={"id": id})
-    if not row:
-        raise HTTPException(status_code=404, detail="Usuario no encontrado")
-    return row
+    
+    if usuario_actual["rol"] != "admin":
+        raise HTTPException(status_code=403, detail="No tienes permiso para ver este usuario")
+
+    try:
+        query = "SELECT * FROM usuarios WHERE id = :id"
+        row = await db.fetch_one(query=query, values={"id": id})
+        if not row:
+            raise HTTPException(status_code=404, detail="Usuario no encontrado")
+        return row
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al obtener el usuario: {e}")
 
 
-async def create_usuario(usuario: UsuarioIn) -> UsuarioOut:  # POST - Crea un usuario
+async def create_usuario(usuario: UsuarioIn, usuario_actual) -> UsuarioOut:  # POST - Crea un usuario
+
+    if usuario_actual["rol"] != "admin":
+        raise HTTPException(status_code=403, detail="No tienes permiso para crear un usuario")
 
     revision_query = "SELECT id FROM usuarios WHERE email = :email"
     existe = await db.fetch_one(
@@ -51,8 +80,12 @@ async def create_usuario(usuario: UsuarioIn) -> UsuarioOut:  # POST - Crea un us
 
 
 async def update_usuario(
-    usuario_id: int, usuario: UsuarioIn
+    usuario_id: int, usuario: UsuarioUpdate, usuario_actual
 ) -> UsuarioOut:  # PUT - Modifica el usuario con el id indicado
+    
+    if usuario_actual["rol"] != "admin":
+        raise HTTPException(status_code=403, detail="No tienes permiso para modificar un usuario")
+
     revision_query = "SELECT id FROM usuarios WHERE id = :id"  # Verificación de que el usuario exista
     existe = await db.fetch_one(revision_query, values={"id": usuario_id})
     if not existe:
@@ -74,9 +107,7 @@ async def update_usuario(
             UPDATE usuarios
             SET nombre = :nombre,
                 email = :email,
-                password_hash = :password_hash,
                 rol = :rol,
-                activo = :activo
             WHERE id = :id
         """
         values = {**usuario.dict(), "id": usuario_id}
@@ -89,22 +120,51 @@ async def update_usuario(
 
 
 async def delete_usuario(
-    id: int,
-) -> dict:  # DELETE - Elimina el usuario con el id indicado
+    id: int, usuario_actual
+) -> dict:  # DELETE - Elimina el usuario con el id indicado - Soft delete
+    
+    if usuario_actual["rol"] != "admin":
+        raise HTTPException(status_code=403, detail="No tienes permiso para eliminar un usuario")
+
     revision_query = (
-        "SELECT id FROM usuarios WHERE id = :id"  # Verifica que exista el usuario
+        "SELECT id FROM usuarios WHERE id = :id AND activo = true"  # Verifica que exista el usuario
     )
     existe = await db.fetch_one(revision_query, values={"id": id})
     if not existe:
         raise HTTPException(
-            status_code=404, detail=f"Usuario con id {id} no encontrado"
+            status_code=404, detail=f"Usuario con id {id} no encontrado o ya está eliminado"
         )
 
     try:
-        query = "DELETE FROM usuarios WHERE id = :id"
+        query = "UPDATE usuarios SET activo = false WHERE id = :id"
         await db.execute(query=query, values={"id": id})
         return {"message": f"Usuario con id {id} eliminado correctamente"}
 
     except Exception as e:
         print(f"Error al eliminar usuario: {e}")
         raise HTTPException(status_code=400, detail="Error al eliminar el usuario")
+    
+async def restore_usuario(
+    id: int, usuario_actual
+) -> dict:  # PUT - Restaura el usuario con el id indicado
+    
+    if usuario_actual["rol"] != "admin":
+        raise HTTPException(status_code=403, detail="No tienes permiso para restaurar un usuario")
+
+    revision_query = (
+        "SELECT id FROM usuarios WHERE id = :id AND activo = false"  # Verifica que exista el usuario borrado
+    )
+    existe = await db.fetch_one(revision_query, values={"id": id})
+    if not existe:
+        raise HTTPException(
+            status_code=404, detail=f"Usuario con id {id} no encontrado o ya está activo"
+        )
+
+    try:
+        query = "UPDATE usuarios SET activo = true WHERE id = :id"
+        await db.execute(query=query, values={"id": id})
+        return {"message": f"Usuario con id {id} restaurado correctamente"}
+
+    except Exception as e:
+        print(f"Error al restaurar usuario: {e}")
+        raise HTTPException(status_code=400, detail="Error al restaurar el usuario")
