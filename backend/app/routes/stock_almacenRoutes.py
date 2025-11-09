@@ -41,16 +41,16 @@ async def read_stock_almacen(id: int, usuario_actual=Depends(require_auth)):
 async def create_stock_almacen(
     stock_almacen: Stock_AlmacenIn, usuario_actual=Depends(require_auth)
 ):
-    return await service.create_stock_almacen(stock_almacen)
+    return await service.create_stock_almacen(stock_almacen, usuario_actual)
 
 
 @router.put("/{id}", response_model=Stock_AlmacenOut)
 async def update_stock_almacen(
     id: int, stock_almacen: Stock_AlmacenIn, usuario_actual=Depends(require_auth)
 ):
-    return await service.update_stock_almacen(id, stock_almacen)
+    return await service.update_stock_almacen(id, stock_almacen, usuario_actual)
 
 
 @router.delete("/{id}")
 async def delete_stock_almacen(id: int, usuario_actual=Depends(require_auth)):
-    return await service.delete_stock_almacen(id)
+    return await service.delete_stock_almacen(id, usuario_actual)
