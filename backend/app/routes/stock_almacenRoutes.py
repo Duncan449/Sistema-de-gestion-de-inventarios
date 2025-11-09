@@ -12,6 +12,26 @@ async def read_stock_almacen(usuario_actual=Depends(require_auth)):
     return await service.get_all_stock_almacenes()
 
 
+@router.get("/producto/{producto_id}", response_model=List[Stock_AlmacenOut])
+async def read_stock_con_producto(producto_id: int, usuario_actual=Depends(require_auth)):
+    return await service.get_stock_con_producto(producto_id)
+
+
+@router.get("/minimo/{almacen_id}", response_model=List[Stock_AlmacenOut])
+async def read_stock_minimo_por_almacen(almacen_id: int, usuario_actual=Depends(require_auth)):
+    return await service.get_stock_minimo_por_almacen(almacen_id)
+
+
+@router.get("/por_producto", response_model=List[Stock_AlmacenOut])
+async def read_stock_por_producto(usuario_actual=Depends(require_auth)):
+    return await service.get_stock_por_producto()   
+
+
+@router.get("/por_almacen/{almacen_id}", response_model=List[Stock_AlmacenOut])
+async def read_stock_por_almacen(almacen_id: int, usuario_actual=Depends(require_auth)):
+    return await service.get_stock_por_almacen(almacen_id)  
+
+
 @router.get("/{id}", response_model=Stock_AlmacenOut)
 async def read_stock_almacen(id: int, usuario_actual=Depends(require_auth)):
     return await service.get_stock_almacen_by_id(id)

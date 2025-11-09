@@ -29,6 +29,53 @@ async def get_stock_almacen_by_id(id: int) -> Stock_AlmacenOut:  # OBTENER el st
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al obtener stock: {e}")
 
+    # ACÁ PODEMOS Implementar al menos cuatro consultas SQL que incluyan, de manera alternada:
+    # o INNER JOIN
+    # o Subconsultas (Subqueries)
+    # o Agrupamientos con GROUP BY
+
+    # Ejemplo de INNER JOIN
+async def get_stock_con_producto(producto_id: int) -> List[Stock_AlmacenOut]:  # OBTENER el stock de un producto específico junto con su nombre
+    query = """
+        SELECT sa.*, p.nombre AS nombre_producto
+        FROM stock_almacen sa
+        INNER JOIN productos p ON sa.fk_producto = p.id
+        WHERE p.id = :producto_id
+    """
+    rows = await db.fetch_all(query=query, values={"producto_id": producto_id})
+    return rows
+
+    # Ejemplo de Subconsulta
+async def get_stock_minimo_por_almacen(almacen_id: int) -> List[Stock_AlmacenOut]:  # OBTENER el stock de productos en un almacén que estén por debajo del stock mínimo definido en la tabla productos
+    query = """
+        SELECT *
+        FROM stock_almacen
+        WHERE fk_almacen = :almacen_id
+        AND cantidad_disponible < (SELECT stock_minimo FROM productos WHERE id = fk_producto)
+    """
+    rows = await db.fetch_all(query=query, values={"almacen_id": almacen_id})
+    return rows
+
+    # Ejemplo de Agrupamiento con GROUP BY
+async def get_stock_por_producto() -> List[Stock_AlmacenOut]:   # OBTENER la cantidad total disponible por producto en todos los almacenes
+    query = """
+        SELECT fk_producto, SUM(cantidad_disponible) AS total_disponible
+        FROM stock_almacen
+        GROUP BY fk_producto
+    """
+    rows = await db.fetch_all(query=query)
+    return rows
+
+async def get_stock_por_almacen(almacen_id: int) -> List[Stock_AlmacenOut]:  # OBTENER la cantidad total disponible por almacén
+    query = """
+        SELECT fk_almacen, SUM(cantidad_disponible) AS total_disponible
+        FROM stock_almacen
+        WHERE fk_almacen = :almacen_id
+        GROUP BY fk_almacen
+    """
+    rows = await db.fetch_all(query=query, values={"almacen_id": almacen_id})
+    return rows
+
 
 async def create_stock_almacen(stock_almacen: Stock_AlmacenIn) -> Stock_AlmacenOut:  # CREAR un nuevo registro en la tabla stock_almacen
     try:

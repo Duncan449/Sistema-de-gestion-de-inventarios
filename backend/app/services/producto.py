@@ -37,7 +37,7 @@ def validar_stock_minimo(stock_minimo: int):
 
 async def validar_categoria(fk_categoria: int):
     # Valida si la categoría existe
-    categoria_query = "SELECT id FROM categorias WHERE id = :id AND activa = TRUE"
+    categoria_query = "SELECT id FROM categorias WHERE id = :id AND activa = true"
     categoria_existe = await db.fetch_one(categoria_query, values={"id": fk_categoria})
     if not categoria_existe:
         raise HTTPException(
@@ -48,7 +48,7 @@ async def validar_categoria(fk_categoria: int):
 
 async def validar_proveedor(fk_proveedor: int):
     # Valida si el proveedor existe
-    proveedor_query = "SELECT id FROM proveedores WHERE id = :id AND activo = TRUE"
+    proveedor_query = "SELECT id FROM proveedores WHERE id = :id AND activo = true"
     proveedor_existe = await db.fetch_one(proveedor_query, values={"id": fk_proveedor})
     if not proveedor_existe:
         raise HTTPException(
@@ -62,10 +62,33 @@ async def validar_proveedor(fk_proveedor: int):
 
 async def get_all_productos() -> (
     List[ProductoOut]
-):  # GET - Trae a todos los productos de la BD
-    query = "SELECT * FROM productos"
-    rows = await db.fetch_all(query=query)
-    return rows
+):  # GET - Trae a todos los productos visibles de la BD
+    try:
+        query = "SELECT * FROM productos WHERE activo = true"
+        rows = await db.fetch_all(query=query)
+        return rows
+    except Exception as e:
+        print(f"Error al obtener productos: {e}")
+        raise HTTPException(
+            status_code=500, detail="Error al obtener los productos. Intente nuevamente."
+        )
+    
+async def get_all_productos_borrados(usuario_actual) -> (
+    List[ProductoOut]
+):  # GET - Trae a todos los productos borrados de la BD
+    
+    if usuario_actual["rol"] != "admin":
+        raise HTTPException(status_code=403, detail="No tienes permiso para ver los productos borrados")
+
+    try:
+        query = "SELECT * FROM productos WHERE activo = false"
+        rows = await db.fetch_all(query=query)
+        return rows
+    except Exception as e:
+        print(f"Error al obtener productos borrados: {e}")
+        raise HTTPException(
+            status_code=500, detail="Error al obtener los productos borrados. Intente nuevamente."
+        )
 
 
 async def get_producto_by_id(
@@ -79,8 +102,11 @@ async def get_producto_by_id(
 
 
 async def create_producto(
-    producto: ProductoIn,
+    producto: ProductoIn, usuario_actual
 ) -> ProductoOut:  # POST - Crea un producto
+    
+    if usuario_actual["rol"] != "admin":
+        raise HTTPException(status_code=403, detail="No tienes permiso para crear productos")
 
     validar_precios(producto.precio_compra, producto.precio_venta)
     validar_stock_minimo(producto.stock_minimo)
@@ -113,8 +139,11 @@ async def create_producto(
 
 
 async def update_producto(
-    producto_id: int, producto: ProductoIn
+    producto_id: int, producto: ProductoIn, usuario_actual
 ) -> ProductoOut:  # PUT - Modifica el producto con el id indicado
+
+    if usuario_actual["rol"] != "admin":
+        raise HTTPException(status_code=403, detail="No tienes permiso para modificar productos")
 
     validar_precios(producto.precio_compra, producto.precio_venta)
     validar_stock_minimo(producto.stock_minimo)
@@ -161,22 +190,50 @@ async def update_producto(
 
 
 async def delete_producto(
-    id: int,
-) -> dict:  # DELETE - Elimina el producto con el id indicado
+    id: int, usuario_actual
+) -> dict:  # DELETE - Elimina el producto con el id indicado - Soft delete
+    if usuario_actual["rol"] != "admin":
+        raise HTTPException(status_code=403, detail="No tienes permiso para eliminar productos")
+
     revision_query = (
-        "SELECT id FROM productos WHERE id = :id"  # Verifica que exista el producto
+        "SELECT id FROM productos WHERE id = :id AND activo = true"  # Verifica que exista el producto
     )
     existe = await db.fetch_one(revision_query, values={"id": id})
     if not existe:
         raise HTTPException(
-            status_code=404, detail=f"Producto con id {id} no encontrado"
+            status_code=404, detail=f"Producto con id {id} no encontrado o ya está eliminado"
         )
 
     try:
-        query = "DELETE FROM productos WHERE id = :id"
+        query = "UPDATE productos SET activo = false WHERE id = :id"
         await db.execute(query=query, values={"id": id})
         return {"message": f"Producto con id {id} eliminado correctamente"}
 
     except Exception as e:
         print(f"Error al eliminar producto: {e}")
         raise HTTPException(status_code=400, detail="Error al eliminar el producto")
+    
+async def restore_producto(
+    id: int, usuario_actual
+) -> dict:  # POST- Restaurar un producto borrado 
+    
+    if usuario_actual["rol"] != "admin":
+        raise HTTPException(status_code=403, detail="No tienes permiso para restaurar productos")
+
+    revision_query = (
+        "SELECT id FROM productos WHERE id = :id AND activo = false"  # Verifica que exista el producto
+    )
+    existe = await db.fetch_one(revision_query, values={"id": id})
+    if not existe:
+        raise HTTPException(
+            status_code=404, detail=f"Producto con id {id} no encontrado o ya está activo"
+        )
+
+    try:
+        query = "UPDATE productos SET activo = true WHERE id = :id"
+        await db.execute(query=query, values={"id": id})
+        return {"message": f"Producto con id {id} restaurado correctamente"}
+
+    except Exception as e:
+        print(f"Error al restaurar producto: {e}")
+        raise HTTPException(status_code=400, detail="Error al restaurar el producto")

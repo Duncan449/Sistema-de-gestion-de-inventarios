@@ -24,9 +24,9 @@ async def read_movimiento(id: int, usuario_actual=Depends(require_auth)):
 async def create_movimiento(
     movimiento: MovimientoInventarioIn, usuario_actual=Depends(require_auth)
 ):
-    return await service.create_movimiento(movimiento)
+    return await service.create_movimiento(movimiento, usuario_actual)
 
 
 @router.delete("/{id}")
 async def delete_movimiento(id: int, usuario_actual=Depends(require_auth)):
-    return await service.delete_movimiento(id)
+    return await service.delete_movimiento(id, usuario_actual)

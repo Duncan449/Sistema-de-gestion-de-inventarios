@@ -7,8 +7,7 @@ from app.schemas.movimiento_inventario import MovimientoInventarioIn, Movimiento
 # VALIDACIONES
 
 
-def validar_tipo_movimiento(tipo: str) -> str:
-    """Validar que el tipo de movimiento sea válido"""
+def validar_tipo_movimiento(tipo: str) -> str:  # Validar que el tipo de movimiento sea válido
     tipos_validos = ["entrada", "salida", "ajuste", "devolucion"]
     if tipo.lower() not in tipos_validos:
         raise HTTPException(
@@ -18,8 +17,7 @@ def validar_tipo_movimiento(tipo: str) -> str:
     return tipo.lower()
 
 
-def validar_cantidad(cantidad: int) -> int:
-    """Validar que la cantidad sea válida"""
+def validar_cantidad(cantidad: int) -> int:     # Validar que la cantidad sea positiva y razonable
     if cantidad <= 0:
         raise HTTPException(
             status_code=400, detail="La cantidad debe ser mayor a 0"
@@ -33,8 +31,7 @@ def validar_cantidad(cantidad: int) -> int:
     return cantidad
 
 
-async def validar_producto_existe(fk_producto: int):
-    """Validar que el producto existe y está activo"""
+async def validar_producto_existe(fk_producto: int):    # Validar que el producto existe y está activo
     query = "SELECT id, activo FROM productos WHERE id = :id"
     producto = await db.fetch_one(query, values={"id": fk_producto})
 
@@ -49,8 +46,7 @@ async def validar_producto_existe(fk_producto: int):
         )
 
 
-async def validar_almacen_existe(fk_almacen: int):
-    """Validar que el almacén existe y está activo"""
+async def validar_almacen_existe(fk_almacen: int):  # Validar que el almacén existe y está activo
     query = "SELECT id, activo FROM almacenes WHERE id = :id"
     almacen = await db.fetch_one(query, values={"id": fk_almacen})
 
@@ -65,8 +61,7 @@ async def validar_almacen_existe(fk_almacen: int):
         )
 
 
-async def validar_usuario_existe(fk_usuario: int):
-    """Validar que el usuario existe y está activo"""
+async def validar_usuario_existe(fk_usuario: int): # Validar que el usuario existe y está activo
     query = "SELECT id, activo FROM usuarios WHERE id = :id"
     usuario = await db.fetch_one(query, values={"id": fk_usuario})
 
@@ -81,8 +76,7 @@ async def validar_usuario_existe(fk_usuario: int):
         )
 
 
-async def validar_proveedor_existe(fk_proveedor: int | None):
-    """Validar que el proveedor existe si se proporciona"""
+async def validar_proveedor_existe(fk_proveedor: int | None): # Validar que el proveedor existe y está activo
     if not fk_proveedor:
         return
 
@@ -99,9 +93,7 @@ async def validar_proveedor_existe(fk_proveedor: int | None):
             status_code=400, detail="El proveedor está inactivo"
         )
 
-
-async def obtener_stock_actual(fk_producto: int, fk_almacen: int) -> int:
-    """Obtener el stock actual de un producto en un almacén"""
+async def obtener_stock_actual(fk_producto: int, fk_almacen: int) -> int: # Obtener el stock actual de un producto en un almacén
     query = """
         SELECT cantidad_disponible 
         FROM stock_almacen 
@@ -116,8 +108,8 @@ async def obtener_stock_actual(fk_producto: int, fk_almacen: int) -> int:
 
 async def calcular_nuevo_stock(
     cantidad_actual: int, cantidad_movimiento: int, tipo_movimiento: str
-) -> int:
-    """Calcular el nuevo stock según el tipo de movimiento"""
+) -> int:       # Calcular el nuevo stock según el tipo de movimiento
+    
     if tipo_movimiento == "entrada":
         return cantidad_actual + cantidad_movimiento
     elif tipo_movimiento == "salida":
@@ -136,8 +128,7 @@ async def calcular_nuevo_stock(
     return cantidad_actual
 
 
-async def actualizar_stock_almacen(fk_producto: int, fk_almacen: int, nuevo_stock: int):
-    """Actualizar o crear el registro de stock en stock_almacen"""
+async def actualizar_stock_almacen(fk_producto: int, fk_almacen: int, nuevo_stock: int):  # Actualizar el stock en la tabla stock_almacen
     query_check = """
         SELECT id FROM stock_almacen 
         WHERE fk_producto = :fk_producto AND fk_almacen = :fk_almacen
@@ -323,8 +314,7 @@ async def create_movimiento(
         )
 
 
-async def delete_movimiento(id: int) -> dict:
-    """DELETE - Elimina un movimiento (NO RECOMENDADO)"""
+async def delete_movimiento(id: int , usuario_actual: dict) -> dict: # DELETE - No se permite eliminar movimientos de inventario
     raise HTTPException(
         status_code=400,
         detail="No se permite eliminar movimientos de inventario. Use un ajuste para corregir.",

@@ -13,6 +13,11 @@ async def read_proveedores(usuario_actual=Depends(require_auth)):
     return await service.get_all_proveedores()
 
 
+@router.get("/borrados", response_model=List[ProveedorOut])
+async def read_proveedores_borrados(usuario_actual=Depends(require_auth)):
+    return await service.get_all_proveedores_borrados(usuario_actual)
+
+
 @router.get("/{id}", response_model=ProveedorOut)
 async def read_proveedor(id: int, usuario_actual=Depends(require_auth)):
     return await service.get_proveedor_by_id(id)
@@ -22,16 +27,20 @@ async def read_proveedor(id: int, usuario_actual=Depends(require_auth)):
 async def create_proveedor(
     proveedor: ProveedorIn, usuario_actual=Depends(require_auth)
 ):
-    return await service.create_proveedor(proveedor)
+    return await service.create_proveedor(proveedor, usuario_actual)
 
 
 @router.put("/{id}", response_model=ProveedorOut)
 async def update_proveedor(
     id: int, proveedor: ProveedorIn, usuario_actual=Depends(require_auth)
 ):
-    return await service.update_proveedor(id, proveedor)
+    return await service.update_proveedor(id, proveedor, usuario_actual)
 
 
 @router.delete("/{id}")
 async def delete_proveedor(id: int, usuario_actual=Depends(require_auth)):
-    return await service.delete_proveedor(id)
+    return await service.delete_proveedor(id, usuario_actual)
+
+@router.put("/restaurar/{id}")
+async def restore_proveedor(id: int, usuario_actual=Depends(require_auth)):
+    return await service.restore_proveedor(id, usuario_actual)

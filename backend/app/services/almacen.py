@@ -5,16 +5,28 @@ from app.schemas.almacen import AlmacenIn, AlmacenOut
 
 # CRUD ALMACEN 
 
-async def get_all_almacenes() -> List[AlmacenOut]:  # Obtener todos los almacenes
+async def get_all_almacenes() -> List[AlmacenOut]:  # Obtener todos los almacenes visibles
     try: 
-        query = "SELECT * FROM almacenes"
+        query = "SELECT * FROM almacenes WHERE activo = true"
         rows = await db.fetch_all(query=query)
         return rows
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al obtener almacenes: {e}")
 
+async def get_all_almacenes_borrados(usuario_actual) -> List[AlmacenOut]:  # Obtener todos los almacenes borrados
 
-async def get_almacen_by_id(id: int) -> AlmacenOut:  # Obtener los almacenes por id
+    if usuario_actual["rol"] != "admin":
+        raise HTTPException(status_code=403, detail="No tienes permiso para ver los almacenes borrados")
+    
+    try: 
+        query = "SELECT * FROM almacenes WHERE activo = false"
+        rows = await db.fetch_all(query=query)
+        return rows
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al obtener almacenes borrados: {e}")
+
+
+async def get_almacen_by_id(id: int) -> AlmacenOut:  # Obtener un almacen por id
     try:
         if id <= 0:  # Validar IDs negativos o cero
             raise HTTPException(status_code=400, detail="ID inválido")
@@ -30,7 +42,11 @@ async def get_almacen_by_id(id: int) -> AlmacenOut:  # Obtener los almacenes por
         raise HTTPException(status_code=500, detail=f"Error al obtener almacen: {e}")
 
 
-async def create_almacen(almacen: AlmacenIn) -> AlmacenOut:  # Crear un nuevo almacen
+async def create_almacen(almacen: AlmacenIn, usuario_actual) -> AlmacenOut:  # Crear un nuevo almacen
+
+    if usuario_actual["rol"] != "admin":
+        raise HTTPException(status_code=403, detail="No tienes permiso para crear almacenes")
+    
     try:
         if not almacen.nombre.strip():
             raise HTTPException(status_code=400, detail="El nombre no puede estar vacío")  # Validar que el nombre no esté vacío
@@ -51,7 +67,11 @@ async def create_almacen(almacen: AlmacenIn) -> AlmacenOut:  # Crear un nuevo al
         raise HTTPException(status_code=500, detail=f"Error al crear almacen: {e}")  
 
 
-async def update_almacen(almacen_id: int, almacen: AlmacenIn) -> AlmacenOut:  # Actualizar un almacen
+async def update_almacen(almacen_id: int, almacen: AlmacenIn, usuario_actual) -> AlmacenOut:  # Actualizar un almacen
+
+    if usuario_actual["rol"] != "admin":
+        raise HTTPException(status_code=403, detail="No tienes permiso para actualizar almacenes")
+
     try:
         if almacen.capacidad_maxima <= 0:
             raise HTTPException(status_code=400, detail="La capacidad máxima debe ser mayor a 0")  # Validar que la capacidad no sea menor o igual a 0
@@ -79,14 +99,33 @@ async def update_almacen(almacen_id: int, almacen: AlmacenIn) -> AlmacenOut:  # 
         raise HTTPException(status_code=500, detail=f"Error al actualizar almacen: {e}")
 
 
-async def delete_almacen(id: int) -> dict:  # Eliminar un almacen
+async def delete_almacen(id: int, usuario_actual) -> dict:  # Eliminar un almacen - Soft delete
+    if usuario_actual["rol"] != "admin":
+        raise HTTPException(status_code=403, detail="No tienes permiso para eliminar almacenes")
+
     try:
-        query = "DELETE FROM almacenes WHERE id = :id"
+        query = "UPDATE almacenes SET activo = 0 WHERE id = :id AND activo = 1"
         result = await db.execute(query=query, values={"id": id})
         if not result:
-            raise HTTPException(status_code=404, detail="Almacen no encontrado")
+            raise HTTPException(status_code=404, detail="Almacen no encontrado o ya está eliminado")
         return {"message": "Almacen eliminado correctamente"}
     except HTTPException:
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al eliminar almacen: {e}")
+
+
+async def restore_almacen(id: int, usuario_actual) -> dict:  # Restaurar un almacen borrado 
+    if usuario_actual["rol"] != "admin":
+        raise HTTPException(status_code=403, detail="No tienes permiso para restaurar almacenes")
+
+    try:
+        query = "UPDATE almacenes SET activo = 1 WHERE id = :id AND activo = 0"
+        result = await db.execute(query=query, values={"id": id})
+        if not result:
+            raise HTTPException(status_code=404, detail="Almacen no encontrado o ya está activo")
+        return {"message": "Almacen restaurado correctamente"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al restaurar almacen: {e}")

@@ -76,7 +76,7 @@ def validar_email(email: str) -> str:
 async def get_all_proveedores() -> List[ProveedorOut]:
     # GET - Trae a todos los proveedores de la BD
     try:
-        query = "SELECT * FROM proveedores ORDER BY nombre"
+        query = "SELECT * FROM proveedores WHERE activo = true ORDER BY nombre"
         rows = await db.fetch_all(query=query)
         return rows
     except Exception as e:
@@ -84,6 +84,19 @@ async def get_all_proveedores() -> List[ProveedorOut]:
             status_code=500, detail=f"Error al obtener proveedores: {e}"
         )
 
+async def get_all_proveedores_borrados(usuario_actual) -> List[ProveedorOut]:
+    # GET - Trae a todos los proveedores borrados de la BD
+    if usuario_actual["rol"] != "admin":
+        raise HTTPException(status_code=403, detail="No tienes permiso para ver los proveedores borrados")
+
+    try:
+        query = "SELECT * FROM proveedores WHERE activo = false ORDER BY nombre"
+        rows = await db.fetch_all(query=query)
+        return rows
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Error al obtener proveedores borrados: {e}"
+        )
 
 async def get_proveedor_by_id(id: int) -> ProveedorOut:
     # GET - Trae al proveedor con el id indicado
@@ -105,9 +118,12 @@ async def get_proveedor_by_id(id: int) -> ProveedorOut:
         raise HTTPException(status_code=500, detail=f"Error al obtener proveedor: {e}")
 
 
-async def create_proveedor(proveedor: ProveedorIn) -> ProveedorOut:
+async def create_proveedor(proveedor: ProveedorIn, usuario_actual) -> ProveedorOut:
     # POST - Crea un proveedor
 
+    if usuario_actual["rol"] != "admin":
+        raise HTTPException(status_code=403, detail="No tienes permiso para crear proveedores")
+    
     try:
         # VALIDAR CAMPOS
         nombre_validado = validar_nombre(proveedor.nombre)
@@ -175,8 +191,11 @@ async def create_proveedor(proveedor: ProveedorIn) -> ProveedorOut:
         raise HTTPException(status_code=500, detail=f"Error al crear proveedor: {e}")
 
 
-async def update_proveedor(proveedor_id: int, proveedor: ProveedorIn) -> ProveedorOut:
+async def update_proveedor(proveedor_id: int, proveedor: ProveedorIn, usuario_actual) -> ProveedorOut:
     # PUT - Modifica el proveedor con el id indicado
+
+    if usuario_actual["rol"] != "admin":
+        raise HTTPException(status_code=403, detail="No tienes permiso para modificar proveedores")
 
     try:
         # Validar que el ID sea positivo
@@ -268,8 +287,11 @@ async def update_proveedor(proveedor_id: int, proveedor: ProveedorIn) -> Proveed
         )
 
 
-async def delete_proveedor(id: int) -> dict:
-    # DELETE - Elimina el proveedor con el id indicado
+async def delete_proveedor(id: int, usuario_actual) -> dict:
+    # DELETE - Elimina el proveedor con el id indicado - Soft delete
+
+    if usuario_actual["rol"] != "admin":
+        raise HTTPException(status_code=403, detail="No tienes permiso para eliminar proveedores")
 
     try:
         # Validar ID positivo
@@ -279,25 +301,15 @@ async def delete_proveedor(id: int) -> dict:
             )
 
         # Verificar que existe antes de eliminar
-        query_exists = "SELECT id FROM proveedores WHERE id = :id"
+        query_exists = "SELECT id FROM proveedores WHERE id = :id AND activo = true"
         exists = await db.fetch_one(query_exists, values={"id": id})
         if not exists:
             raise HTTPException(
                 status_code=404,
-                detail=f"Proveedor con ID {id} no encontrado",
+                detail=f"Proveedor con ID {id} no encontrado o ya está eliminado",
             )
 
-        # #  Verificar si tiene productos asociados (restricción de FK)
-        # query_productos = "SELECT COUNT(*) as total FROM productos WHERE proveedor_id = :id"
-        # productos = await db.fetch_one(query_productos, values={"id": id})
-        # if productos and productos['total'] > 0:
-        #     raise HTTPException(
-        #         status_code=400,
-        #         detail=f"No se puede eliminar el proveedor porque tiene {productos['total']} producto(s) asociado(s)"
-        #     )
-
-        # Eliminar
-        query = "DELETE FROM proveedores WHERE id = :id"
+        query = "UPDATE proveedores SET activo = false WHERE id = :id"
         await db.execute(query=query, values={"id": id})
         return {"message": f"Proveedor con ID {id} eliminado correctamente"}
 
@@ -306,3 +318,36 @@ async def delete_proveedor(id: int) -> dict:
     except Exception as e:
         print(f"Error en delete_proveedor: {e}")
         raise HTTPException(status_code=500, detail=f"Error al eliminar proveedor: {e}")
+    
+async def restore_proveedor(
+    id: int, usuario_actual
+) -> dict:  # POST- Restaurar un proveedor borrado 
+    
+    if usuario_actual["rol"] != "admin":
+        raise HTTPException(status_code=403, detail="No tienes permiso para restaurar proveedores")
+
+    try:
+        # Validar ID positivo
+        if id <= 0:
+            raise HTTPException(
+                status_code=400, detail="El ID debe ser un número positivo"
+            )
+
+        # Verificar que existe antes de restaurar
+        query_exists = "SELECT id FROM proveedores WHERE id = :id AND activo = false"
+        exists = await db.fetch_one(query_exists, values={"id": id})
+        if not exists:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Proveedor con ID {id} no encontrado o ya está activo",
+            )
+
+        query = "UPDATE proveedores SET activo = true WHERE id = :id"
+        await db.execute(query=query, values={"id": id})
+        return {"message": f"Proveedor con ID {id} restaurado correctamente"}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error en restore_proveedor: {e}")
+        raise HTTPException(status_code=500, detail=f"Error al restaurar proveedor: {e}")
