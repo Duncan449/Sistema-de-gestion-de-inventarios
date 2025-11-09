@@ -23,8 +23,8 @@ async def read_usuarios_borrados(usuario_actual=Depends(require_auth)):
 
 
 @router.get("/{id}", response_model=UsuarioOut)
-async def read_usuario(id: int, usuario_actual=Depends(require_auth)):
-    return await service.get_usuario_by_id(id, usuario_actual)
+async def read_usuario(id: int):
+    return await service.get_usuario_by_id(id)
 
 
 @router.post("/", response_model=UsuarioOut)
