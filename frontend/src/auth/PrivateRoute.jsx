@@ -1,5 +1,5 @@
-import { Navigate } from "react-router-dom"; //Para redirecciones
-import { useAuth } from "../hooks/useAuth"; //Hook personalizado de autenticación
+import { Navigate } from "react-router-dom";
+import { useAuth } from "../hooks/useAuth";
 
 //Componente para proteger rutas que requieren autenticación
 export const ProtectedRoute = ({ children, requiredRole }) => {

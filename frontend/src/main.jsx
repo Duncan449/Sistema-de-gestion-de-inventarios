@@ -4,17 +4,17 @@ import App from "./App.jsx";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 
-// 🧱 Tema global profesional
+//Tema global personalizado
 const theme = createTheme({
   palette: {
     primary: {
-      main: "#1976d2", // Azul profesional (botones, enlaces, títulos)
-      light: "#63a4ff",
-      dark: "#004ba0",
+      main: "#2e8678ff", // Azul profesional (botones, enlaces, títulos)
+      light: "#c7e0dcff",
+      dark: "#1e554cff",
       contrastText: "#ffffff", // Texto sobre botones azules
     },
     secondary: {
-      main: "#455a64", // Gris azulado (complementario)
+      main: "#477f99ff", // Gris azulado (complementario)
       light: "#718792",
       dark: "#1c313a",
       contrastText: "#ffffff",
@@ -35,10 +35,11 @@ const theme = createTheme({
     },
   },
   typography: {
-    fontFamily: "Poppins, Roboto, Arial, sans-serif",
+    fontFamily:
+      "-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen, Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue,sans-serif",
     h4: {
       fontWeight: 600,
-      color: "#1976d2", // Color de títulos principales
+      color: "#8b99a7ff", // Color de títulos principales
     },
     body1: {
       fontSize: "1rem",
@@ -69,16 +70,16 @@ const theme = createTheme({
             color: "#616161",
           },
           "& .MuiInputLabel-root.Mui-focused": {
-            color: "#1976d2",
+            color: "#2e8678ff",
           },
           "& .MuiOutlinedInput-root fieldset": {
             borderColor: "#cfd8dc",
           },
           "& .MuiOutlinedInput-root:hover fieldset": {
-            borderColor: "#1976d2",
+            borderColor: "#2e8678ff",
           },
           "& .MuiOutlinedInput-root.Mui-focused fieldset": {
-            borderColor: "#1976d2",
+            borderColor: "#2e8678ff",
           },
         },
       },
@@ -87,6 +88,7 @@ const theme = createTheme({
 });
 
 ReactDOM.createRoot(document.getElementById("root")).render(
+  //Usamos StrictMode para detectar problemas potenciales en la app
   <React.StrictMode>
     <ThemeProvider theme={theme}>
       <CssBaseline /> {/* Normaliza estilos y aplica el fondo */}

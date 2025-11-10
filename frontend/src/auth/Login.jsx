@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { useAuth } from "../hooks/useAuth";
+import { useNavigate } from "react-router-dom";
 import {
   Container, //Contenedor centrado y con ancho máximo
   Box, //Componente de caja para diseño flexible
@@ -7,6 +9,7 @@ import {
   Typography, //Componente para texto con estilos predefinidos
   Paper, //Tarjeta con sombra (fondo blanco elevado)
   Alert, //Componente para mostrar mensajes de error o información
+  CircularProgress, //Indicador de carga circular
 } from "@mui/material";
 
 function Login() {
@@ -16,6 +19,9 @@ function Login() {
 */
   const [formData, setFormData] = useState({ usuario: "", contraseña: "" });
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const { login } = useAuth();
+  const navigate = useNavigate();
 
   /*
 formData: es un objeto que guarda los valores del formulario. 
@@ -23,7 +29,7 @@ Inicialmente { usuario: "", contraseña: "" }
 
 setFormData: función para actualizar formData
 
-error: string que guarda el mensaje de error (si hay). Inicialmente vacío.
+error: string que guarda el mensaje de error (si hay). Inicialmente vacío
 
 setError: función para actualizar error
 
@@ -37,41 +43,47 @@ el componente con los nuevos valores
   };
 
   /*
-handleChange se ejecutará cuando el usuario escriba en cualquier TextField.
+handleChange se ejecutará cuando el usuario escriba en cualquier TextField
 
-e es el evento del input; e.target es el elemento que disparó el evento.
+e es el evento del input; e.target es el elemento que disparó el evento
 
 const { name, value } = e.target; extrae el name y el value del input 
-(importante: los TextField tienen la prop name="usuario" o name="contraseña").
+(importante: los TextField tienen la prop name="usuario" o name="contraseña")
 
 setFormData({ ...formData, [name]: value });
 Actualiza formData manteniendo las demás propiedades (...formData) y 
-cambiando solo la propiedad cuyo nombre viene en name. Esto permite usar un solo handler para ambos campos.
+cambiando solo la propiedad cuyo nombre viene en name. Esto permite usar un solo handler para ambos campos
 */
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  //Maneja el envío del formulario
+  const handleSubmit = async (e) => {
+    e.preventDefault(); //Evita que el formulario haga la recarga de la página (comportamiento por defecto)
+    setError("");
 
-    if (formData.usuario === "" || formData.contraseña === "") {
+    if (!formData.usuario || !formData.contraseña) {
       setError("Por favor complete ambos campos");
-    } else if (formData.usuario === "admin" && formData.contraseña === "1234") {
-      alert("Inicio de sesión exitoso ");
-      setError("");
-    } else {
-      setError("Usuario o contraseña incorrectos ");
+      return;
+    }
+
+    setLoading(true); //Indica que se está procesando el login
+
+    try {
+      const result = await login(formData.usuario, formData.contraseña); //Llama a la función login del hook useAuth
+
+      if (result.error) {
+        //Si hay un error en el login, lo muestra
+        setError(result.error);
+      } else {
+        //Redirigir al dashboard
+        navigate("/dashboard");
+      }
+    } catch (err) {
+      setError("Error al intentar iniciar sesión");
+      console.error("Error en login:", err);
+    } finally {
+      setLoading(false); //Termina el estado de carga independientemente del resultado
     }
   };
-
-  /*
-e.preventDefault(); evita que el formulario haga la 
-recarga de la página (comportamiento por defecto al enviar un <form>)
-
-Luego hay una validación simple:
-
-Si algún campo está vacío: setError("Por favor complete ambos campos")
-Si las credenciales coinciden de inicia sesión
-Si las credenciales no coinciden da error
-*/
 
   return (
     //El return contiene la estructura visual del Login
@@ -95,6 +107,14 @@ Si las credenciales no coinciden da error
           Iniciar Sesión
         </Typography>
 
+        <Typography
+          variant="body2"
+          align="center"
+          sx={{ color: "text.secondary", marginBottom: 3 }}
+        >
+          Sistema de Gestión de Inventario
+        </Typography>
+
         {error && ( //Si error no está vacío, mostrar el alert rojo por defecto
           <Alert severity="error" sx={{ marginBottom: 2 }}>
             {error}
@@ -113,6 +133,7 @@ Si las credenciales no coinciden da error
             onChange={handleChange} //Actualiza el estado cuando el usuario escribe
             variant="outlined" //Estilo del TextField
             fullWidth //Ocupa todo el ancho disponible
+            disabled={loading}
           />
           <TextField
             label="Contraseña"
@@ -122,9 +143,34 @@ Si las credenciales no coinciden da error
             onChange={handleChange}
             variant="outlined" //Si fuera contained sería relleno
             fullWidth
+            disabled={loading}
           />
-          <Button type="submit" variant="contained" fullWidth>
-            Ingresar
+          <Button
+            type="submit"
+            variant="contained"
+            fullWidth
+            disabled={loading}
+            sx={{
+              mt: 1,
+              py: 1.5,
+              position: "relative",
+            }}
+          >
+            {loading ? (
+              <>
+                <CircularProgress
+                  size={24}
+                  sx={{
+                    position: "absolute",
+                    left: "50%",
+                    marginLeft: "-12px",
+                  }}
+                />
+                <span style={{ opacity: 0.5 }}>Iniciando sesión...</span>
+              </>
+            ) : (
+              "Ingresar"
+            )}
           </Button>
         </Box>
       </Paper>

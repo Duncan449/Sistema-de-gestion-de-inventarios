@@ -34,11 +34,8 @@ async def get_all_usuarios_borrados(usuario_actual) -> (
 
 
 async def get_usuario_by_id(
-    id: int, usuario_actual
+    id: int,
 ) -> UsuarioOut:  # GET - Trae al usuario con el id indicado
-    
-    if usuario_actual["rol"] != "admin":
-        raise HTTPException(status_code=403, detail="No tienes permiso para ver este usuario")
 
     try:
         query = "SELECT * FROM usuarios WHERE id = :id"
