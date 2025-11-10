@@ -8,8 +8,7 @@ from app.schemas.proveedor import ProveedorIn, ProveedorOut
 # FUNCIONES DE VALIDACIÓN
 
 
-def validar_nombre(nombre: str) -> str:
-    """Validar que el nombre no sea solo espacios"""
+def validar_nombre(nombre: str) -> str: ## Validar el nombre del proveedor
     if not nombre or nombre.strip() == "":
         raise HTTPException(status_code=400, detail="El nombre no puede estar vacío")
 
@@ -28,8 +27,7 @@ def validar_nombre(nombre: str) -> str:
     return nombre
 
 
-def validar_telefono(telefono: str) -> str:
-    """Validar formato básico de teléfono"""
+def validar_telefono(telefono: str) -> str: # Validar el teléfono del proveedor
     if not telefono:
         return None
 
@@ -63,8 +61,7 @@ def validar_telefono(telefono: str) -> str:
     return telefono_limpio
 
 
-def validar_email(email: str) -> str:
-    """Convertir email a minúsculas"""
+def validar_email(email: str) -> str: #convierte el email a minúsculas y elimina espacios
     if email:
         return email.strip().lower()
     return None

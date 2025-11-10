@@ -47,35 +47,6 @@ async def get_usuario_by_id(
         raise HTTPException(status_code=500, detail=f"Error al obtener el usuario: {e}")
 
 
-async def create_usuario(usuario: UsuarioIn, usuario_actual) -> UsuarioOut:  # POST - Crea un usuario
-
-    if usuario_actual["rol"] != "admin":
-        raise HTTPException(status_code=403, detail="No tienes permiso para crear un usuario")
-
-    revision_query = "SELECT id FROM usuarios WHERE email = :email"
-    existe = await db.fetch_one(
-        revision_query, values={"email": usuario.email}
-    )  # Verificación de que el correo no esté ya registrado
-    if existe:
-        raise HTTPException(
-            status_code=400, detail=f"El email {usuario.email} ya está registrado"
-        )
-
-    try:
-        query = """
-            INSERT INTO usuarios (nombre, email, password_hash, rol, activo)
-            VALUES (:nombre, :email, :password_hash, :rol, :activo)
-        """
-        last_record_id = await db.execute(query=query, values=usuario.dict())
-        return await get_usuario_by_id(last_record_id)
-
-    except Exception as e:
-        print(f"Error al crear usuario: {e}")
-        raise HTTPException(
-            status_code=500, detail="Error al crear el usuario. Intente nuevamente."
-        )
-
-
 async def update_usuario(
     usuario_id: int, usuario: UsuarioUpdate, usuario_actual
 ) -> UsuarioOut:  # PUT - Modifica el usuario con el id indicado
@@ -89,6 +60,16 @@ async def update_usuario(
         raise HTTPException(
             status_code=404, detail=f"Usuario con id {usuario_id} no encontrado"
         )
+    
+    #verificar que el nuevo nombre no esté vacío
+    if not usuario.nombre.strip():
+        raise HTTPException(status_code=400, detail="El nombre del usuario no puede estar vacío")
+    #verificar que el nuevo email no esté vacío
+    if not usuario.email.strip():
+        raise HTTPException(status_code=400, detail="El email del usuario no puede estar vacío")
+    #verificar que el nuevo rol no esté vacío
+    if not usuario.rol.strip():
+        raise HTTPException(status_code=400, detail="El rol del usuario no puede estar vacío")
 
     email_query = "SELECT id FROM usuarios WHERE email = :email AND id != :id"  # Verificación de que el nuevo email no esté ya en uso
     email_existe = await db.fetch_one(
@@ -104,7 +85,7 @@ async def update_usuario(
             UPDATE usuarios
             SET nombre = :nombre,
                 email = :email,
-                rol = :rol,
+                rol = :rol
             WHERE id = :id
         """
         values = {**usuario.dict(), "id": usuario_id}

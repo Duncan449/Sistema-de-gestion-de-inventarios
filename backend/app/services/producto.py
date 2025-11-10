@@ -107,6 +107,14 @@ async def create_producto(
     
     if usuario_actual["rol"] != "admin":
         raise HTTPException(status_code=403, detail="No tienes permiso para crear productos")
+    
+    #verificar que el nombre no esté vacío
+    if not producto.nombre.strip():
+        raise HTTPException(status_code=400, detail="El nombre del producto no puede estar vacío")
+    
+    #verificar que el código no esté vacío
+    if not producto.codigo.strip():
+        raise HTTPException(status_code=400, detail="El código del producto no puede estar vacío")    
 
     validar_precios(producto.precio_compra, producto.precio_venta)
     validar_stock_minimo(producto.stock_minimo)
@@ -144,6 +152,14 @@ async def update_producto(
 
     if usuario_actual["rol"] != "admin":
         raise HTTPException(status_code=403, detail="No tienes permiso para modificar productos")
+    
+    #verificar que el nombre no esté vacío
+    if not producto.nombre.strip():
+        raise HTTPException(status_code=400, detail="El nombre del producto no puede estar vacío")
+    
+    #verificar que el código no esté vacío
+    if not producto.codigo.strip():
+        raise HTTPException(status_code=400, detail="El código del producto no puede estar vacío")
 
     validar_precios(producto.precio_compra, producto.precio_venta)
     validar_stock_minimo(producto.stock_minimo)
