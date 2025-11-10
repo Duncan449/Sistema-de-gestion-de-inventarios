@@ -96,16 +96,16 @@ async def require_auth(token: str = Depends(oauth2_scheme)):
 # Logica de negocio
 
 
-# Autentica un usuario y devuelve un token JWT
+# Autentica un usuario y devuelve un token JWT si está activo
 async def login_usuario(email: str, password: str) -> dict:
     # Buscar usuario por email
-    query = "SELECT id, nombre, email, password_hash FROM usuarios WHERE email = :email"
+    query = "SELECT id, nombre, email, password_hash FROM usuarios WHERE email = :email AND activo = true"
     usuario = await db.fetch_one(query, values={"email": email})
 
     if not usuario:
         raise HTTPException(
             status_code=401,
-            detail="Email o contraseña incorrectos",
+            detail="Email o contraseña incorrectos ",
         )
 
     # Verificar contraseña
@@ -139,6 +139,19 @@ async def login_usuario(email: str, password: str) -> dict:
 async def registrar_usuario(
     nombre: str, email: str, password: str, rol: str
 ) -> UsuarioOut:
+
+    # Verificar que el nombre no esté vacío
+    if not nombre.strip():
+        raise HTTPException(status_code=400, detail="El nombre del usuario no puede estar vacío")
+    # Verificar que el email no esté vacío
+    if not email.strip():
+        raise HTTPException(status_code=400, detail="El email del usuario no puede estar vacío")
+    # Verificar que la contraseña no esté vacía
+    if not password.strip():
+        raise HTTPException(status_code=400, detail="La contraseña del usuario no puede estar vacía")
+    # Verificar que el rol no esté vacío
+    if not rol.strip():
+        raise HTTPException(status_code=400, detail="El rol del usuario no puede estar vacío")
 
     # Verificar que el correo no esté ya registrado
     revision_query = "SELECT id FROM usuarios WHERE email = :email"
