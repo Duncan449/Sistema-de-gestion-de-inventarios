@@ -1,6 +1,5 @@
-from typing import Annotated
 from fastapi import APIRouter, Depends
-from app.schemas.auth import Token, UsuarioLogin
+from app.schemas.auth import Token
 from app.schemas.usuario import UsuarioIn, UsuarioOut
 import app.services.auth as service
 from fastapi.security import OAuth2PasswordRequestForm

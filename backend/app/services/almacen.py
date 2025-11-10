@@ -52,12 +52,10 @@ async def create_almacen(almacen: AlmacenIn, usuario_actual) -> AlmacenOut:  # C
             raise HTTPException(status_code=400, detail="El nombre no puede estar vacío")  # Validar que el nombre no esté vacío
         if not almacen.ubicacion.strip():
             raise HTTPException(status_code=400, detail="La ubicación no puede estar vacía")  # Validar que la ubicación no esté vacía
-        if almacen.capacidad_maxima <= 0:  # Validar que la capacidad no sea menor o igual a 0
-            raise HTTPException(status_code=400, detail="La capacidad máxima debe ser mayor a 0")
         
         query = """
-            INSERT INTO almacenes (nombre, ubicacion, capacidad_maxima, activo)
-            VALUES (:nombre, :ubicacion, :capacidad_maxima, :activo)
+            INSERT INTO almacenes (nombre, ubicacion, activo)
+            VALUES (:nombre, :ubicacion, :activo)
         """
         last_record_id = await db.execute(query=query, values=almacen.dict())  # Crea y retorna el nuevo almacén
         return await get_almacen_by_id(last_record_id)
@@ -71,11 +69,12 @@ async def update_almacen(almacen_id: int, almacen: AlmacenIn, usuario_actual) ->
 
     if usuario_actual["rol"] != "admin":
         raise HTTPException(status_code=403, detail="No tienes permiso para actualizar almacenes")
+    
+    #validar que el nombre no esté vacío
+    if not almacen.nombre.strip():
+        raise HTTPException(status_code=400, detail="El nombre no puede estar vacío")  
 
     try:
-        if almacen.capacidad_maxima <= 0:
-            raise HTTPException(status_code=400, detail="La capacidad máxima debe ser mayor a 0")  # Validar que la capacidad no sea menor o igual a 0
-        
         revision_query = "SELECT id FROM almacenes WHERE id = :id"
         existing = await db.fetch_one(revision_query, values={"id": almacen_id})
         if not existing:
@@ -86,7 +85,6 @@ async def update_almacen(almacen_id: int, almacen: AlmacenIn, usuario_actual) ->
             UPDATE almacenes
             SET nombre = :nombre,
                 ubicacion = :ubicacion,
-                capacidad_maxima = :capacidad_maxima,
                 activo = :activo
             WHERE id = :id
         """

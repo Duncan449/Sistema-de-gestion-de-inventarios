@@ -51,6 +51,10 @@ async def create_categoria(
 
     if usuario_actual["rol"] != "admin":
         raise HTTPException(status_code=403, detail="No tienes permiso para crear categorías")
+    
+    #verificar que el nombre no esté vacío
+    if not categoria.nombre.strip():
+        raise HTTPException(status_code=400, detail="El nombre de la categoría no puede estar vacío")
 
     revision_query = "SELECT id FROM categorias WHERE nombre = :nombre "
     existe = await db.fetch_one(
@@ -90,6 +94,10 @@ async def update_categoria(
         raise HTTPException(
             status_code=404, detail=f"Categoria con id {categoria_id} no encontrada"
         )
+    
+        #verificar que el nombre no esté vacío
+    if not categoria.nombre.strip():
+        raise HTTPException(status_code=400, detail="El nombre de la categoría no puede estar vacío")
 
     nombre_query = "SELECT id FROM categorias WHERE nombre = :nombre AND id != :id"  # Para evitar ponerle el nombre de una categoría ya existente
     nombre_exists = await db.fetch_one(
