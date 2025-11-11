@@ -5,6 +5,27 @@ from app.config.database import db
 from app.schemas.proveedor import ProveedorIn, ProveedorOut
 
 
+# Función auxiliar
+async def get_proveedor_by_id(id: int) -> ProveedorOut:
+    # GET - Trae al proveedor con el id indicado
+    if id <= 0:
+        raise HTTPException(status_code=400, detail="El ID debe ser un número positivo")
+
+    try:
+        query = "SELECT * FROM proveedores WHERE id = :id"
+        row = await db.fetch_one(query=query, values={"id": id})
+        if not row:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Proveedor con ID {id} no encontrado",
+            )
+        return row
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al obtener proveedor: {e}")
+
+
 # FUNCIONES DE VALIDACIÓN
 
 
@@ -94,25 +115,6 @@ async def get_all_proveedores_borrados(usuario_actual) -> List[ProveedorOut]:
         raise HTTPException(
             status_code=500, detail=f"Error al obtener proveedores borrados: {e}"
         )
-
-async def get_proveedor_by_id(id: int) -> ProveedorOut:
-    # GET - Trae al proveedor con el id indicado
-    if id <= 0:
-        raise HTTPException(status_code=400, detail="El ID debe ser un número positivo")
-
-    try:
-        query = "SELECT * FROM proveedores WHERE id = :id"
-        row = await db.fetch_one(query=query, values={"id": id})
-        if not row:
-            raise HTTPException(
-                status_code=404,
-                detail=f"Proveedor con ID {id} no encontrado",
-            )
-        return row
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error al obtener proveedor: {e}")
 
 
 async def create_proveedor(proveedor: ProveedorIn, usuario_actual) -> ProveedorOut:
@@ -315,7 +317,7 @@ async def delete_proveedor(id: int, usuario_actual) -> dict:
     except Exception as e:
         print(f"Error en delete_proveedor: {e}")
         raise HTTPException(status_code=500, detail=f"Error al eliminar proveedor: {e}")
-    
+
 async def restore_proveedor(
     id: int, usuario_actual
 ) -> dict:  # POST- Restaurar un proveedor borrado 

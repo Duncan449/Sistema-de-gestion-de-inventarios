@@ -19,3 +19,7 @@ async def registro(usuario: UsuarioIn) -> UsuarioOut:
     return await service.registrar_usuario(
         usuario.nombre, usuario.email, usuario.password, usuario.rol
     )
+
+@router.get("/me", response_model=UsuarioOut)
+async def read_current_user(current_user=Depends(service.get_current_user)):
+    return current_user

@@ -18,11 +18,6 @@ async def read_proveedores_borrados(usuario_actual=Depends(require_auth)):
     return await service.get_all_proveedores_borrados(usuario_actual)
 
 
-@router.get("/{id}", response_model=ProveedorOut)
-async def read_proveedor(id: int, usuario_actual=Depends(require_auth)):
-    return await service.get_proveedor_by_id(id)
-
-
 @router.post("/", response_model=ProveedorOut)
 async def create_proveedor(
     proveedor: ProveedorIn, usuario_actual=Depends(require_auth)
