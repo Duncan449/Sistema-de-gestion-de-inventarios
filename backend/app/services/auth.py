@@ -79,7 +79,7 @@ async def get_user_from_token(token: str):
         raise credentials_exception
 
     # Buscar usuario en la BD
-    query = "SELECT id, nombre, email, rol FROM usuarios WHERE email = :email"
+    query = "SELECT id, nombre, email, rol FROM usuarios WHERE email = :email AND activo = true"
     usuario = await db.fetch_one(query, values={"email": email})
 
     if usuario is None:
@@ -190,3 +190,7 @@ async def registrar_usuario(
             status_code=500,
             detail="Error al crear el usuario. Intente nuevamente.",
         )
+
+#Obtener el usuario actual a partir del token
+async def get_current_user(token: str = Depends(oauth2_scheme)):
+    return await get_user_from_token(token)
