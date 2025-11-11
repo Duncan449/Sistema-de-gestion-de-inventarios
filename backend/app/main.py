@@ -9,6 +9,7 @@ from app.routes import (
     stock_almacenRoutes,
     movimiento_inventarioRoutes,
     authRoutes,
+    reporteRoutes
 )
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -54,8 +55,5 @@ app.include_router(categoriaRoutes.router, prefix="/categorias", tags=["Categori
 app.include_router(almacenRoutes.router, prefix="/almacenes", tags=["Almacenes"])
 app.include_router(productoRoutes.router, prefix="/productos", tags=["Productos"])
 app.include_router(stock_almacenRoutes.router, prefix="/stock_almacen", tags=["Stock"])
-app.include_router(
-    movimiento_inventarioRoutes.router,
-    prefix="/movimientos",
-    tags=["Movimientos Inventario"],
-)
+app.include_router(movimiento_inventarioRoutes.router, prefix="/movimientos", tags=["Movimientos Inventario"])
+app.include_router(reporteRoutes.router, prefix="/reportes", tags=["Reportes"])

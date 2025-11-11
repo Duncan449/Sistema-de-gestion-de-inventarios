@@ -46,17 +46,6 @@ async def get_stock_con_producto(producto_id: int) -> List[StockConProductoOut]:
     return rows
 
 
-async def get_stock_minimo_por_almacen(almacen_id: int) -> List[Stock_AlmacenOut]:  # OBTENER el stock de productos en un almacén que estén por debajo del stock mínimo definido en la tabla productos
-    query = """
-        SELECT *
-        FROM stock_almacen
-        WHERE fk_almacen = :almacen_id
-        AND cantidad_disponible < (SELECT stock_minimo FROM productos WHERE id = fk_producto)
-    """
-    rows = await db.fetch_all(query=query, values={"almacen_id": almacen_id})
-    return rows
-
-
 async def get_stock_por_producto() -> List[StockPorProductoOut]:   # OBTENER la cantidad total disponible por producto en todos los almacenes
     query = """
         SELECT fk_producto, SUM(cantidad_disponible) AS total_disponible

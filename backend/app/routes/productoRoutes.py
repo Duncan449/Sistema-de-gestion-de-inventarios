@@ -20,11 +20,6 @@ async def read_productos_borrados(usuario_actual=Depends(require_auth)):
     return await service.get_all_productos_borrados(usuario_actual)
 
 
-@router.get("/{id}", response_model=ProductoOut)
-async def read_producto(id: int, usuario_actual=Depends(require_auth)):
-    return await service.get_producto_by_id(id)
-
-
 @router.post("/", response_model=ProductoOut)
 async def create_producto(producto: ProductoIn, usuario_actual=Depends(require_auth)):
     return await service.create_producto(producto, usuario_actual)

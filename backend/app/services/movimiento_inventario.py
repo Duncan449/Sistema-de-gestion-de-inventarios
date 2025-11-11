@@ -3,8 +3,31 @@ from fastapi import HTTPException
 from app.config.database import db
 from app.schemas.movimiento_inventario import MovimientoInventarioIn, MovimientoInventarioOut
 
-# CRUD MOVIMIENTOS INVENTARIO
 
+# Función auxiliar
+async def get_movimiento_by_id(
+    id: int,
+) -> MovimientoInventarioOut:  # GET - Trae un movimiento por id
+    try:
+        if id <= 0:
+            raise HTTPException(status_code=400, detail="ID inválido")
+
+        query = "SELECT * FROM movimientos_inventario WHERE id = :id"
+        row = await db.fetch_one(query=query, values={"id": id})
+
+        if not row:
+            raise HTTPException(status_code=404, detail="Movimiento no encontrado")
+
+        return row
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error al obtener movimiento: {e}")
+        raise HTTPException(status_code=500, detail=f"Error al obtener movimiento: {e}")
+
+
+# CRUD MOVIMIENTOS INVENTARIO
 
 async def get_all_movimientos(usuario_actual) -> List[MovimientoInventarioOut]: # GET - Trae todos los movimientos de inventario
     
@@ -40,27 +63,6 @@ async def get_movimientos_por_usuario(fk_usuario: int, usuario_actual) -> List[M
         print(f"Error al obtener movimientos del usuario {fk_usuario}: {e}")
         raise HTTPException(
             status_code=500, detail=f"Error al obtener movimientos del usuario: {e}"
-        )
-
-async def get_movimiento_by_id(id: int) -> MovimientoInventarioOut: # GET - Trae un movimiento por id
-    try:
-        if id <= 0:
-            raise HTTPException(status_code=400, detail="ID inválido")
-
-        query = "SELECT * FROM movimientos_inventario WHERE id = :id"
-        row = await db.fetch_one(query=query, values={"id": id})
-
-        if not row:
-            raise HTTPException(status_code=404, detail="Movimiento no encontrado")
-
-        return row
-
-    except HTTPException:
-        raise
-    except Exception as e:
-        print(f"Error al obtener movimiento: {e}")
-        raise HTTPException(
-            status_code=500, detail=f"Error al obtener movimiento: {e}"
         )
 
 

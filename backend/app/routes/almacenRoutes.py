@@ -17,11 +17,6 @@ async def read_almacen_borrados(usuario_actual=Depends(require_auth)):
     return await service.get_all_almacenes_borrados(usuario_actual)
 
 
-@router.get("/{id}", response_model=AlmacenOut)
-async def read_almacen(id: int, usuario_actual=Depends(require_auth)):
-    return await service.get_almacen_by_id(id)
-
-
 @router.post("/", response_model=AlmacenOut)
 async def create_almacen(almacen: AlmacenIn, usuario_actual=Depends(require_auth)):
     return await service.create_almacen(almacen, usuario_actual)

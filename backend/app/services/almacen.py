@@ -3,7 +3,25 @@ from fastapi import HTTPException
 from app.config.database import db
 from app.schemas.almacen import AlmacenIn, AlmacenOut
 
-# CRUD ALMACEN 
+
+# Función auxiliar
+async def get_almacen_by_id(id: int) -> AlmacenOut:  # Obtener un almacen por id
+    try:
+        if id <= 0:  # Validar IDs negativos o cero
+            raise HTTPException(status_code=400, detail="ID inválido")
+
+        query = "SELECT * FROM almacenes WHERE id = :id"
+        row = await db.fetch_one(query=query, values={"id": id})
+        if not row:
+            raise HTTPException(status_code=404, detail="Almacen no encontrado")
+        return row
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al obtener almacen: {e}")
+
+
+# CRUD ALMACEN
 
 async def get_all_almacenes() -> List[AlmacenOut]:  # Obtener todos los almacenes visibles
     try: 
@@ -24,22 +42,6 @@ async def get_all_almacenes_borrados(usuario_actual) -> List[AlmacenOut]:  # Obt
         return rows
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al obtener almacenes borrados: {e}")
-
-
-async def get_almacen_by_id(id: int) -> AlmacenOut:  # Obtener un almacen por id
-    try:
-        if id <= 0:  # Validar IDs negativos o cero
-            raise HTTPException(status_code=400, detail="ID inválido")
-        
-        query = "SELECT * FROM almacenes WHERE id = :id"
-        row = await db.fetch_one(query=query, values={"id": id})
-        if not row:
-            raise HTTPException(status_code=404, detail="Almacen no encontrado")
-        return row
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error al obtener almacen: {e}")
 
 
 async def create_almacen(almacen: AlmacenIn, usuario_actual) -> AlmacenOut:  # Crear un nuevo almacen

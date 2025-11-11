@@ -22,11 +22,6 @@ async def read_usuarios_borrados(usuario_actual=Depends(require_auth)):
     return await service.get_all_usuarios_borrados(usuario_actual)
 
 
-@router.get("/{id}", response_model=UsuarioOut)
-async def read_usuario(id: int):
-    return await service.get_usuario_by_id(id)
-
-
 @router.put("/{id}", response_model=UsuarioOut)
 async def update_usuario(
     id: int, usuario: UsuarioUpdate, usuario_actual=Depends(require_auth)

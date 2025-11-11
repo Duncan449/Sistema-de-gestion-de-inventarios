@@ -3,6 +3,18 @@ from fastapi import HTTPException
 from app.config.database import db
 from app.schemas.categoria import CategoriaIn, CategoriaOut
 
+
+# Función auxiliar
+async def get_categoria_by_id(
+    id: int,
+) -> CategoriaOut:  # GET - Trae a la categoría con el id indicado
+    query = "SELECT * FROM categorias WHERE id = :id"
+    row = await db.fetch_one(query=query, values={"id": id})
+    if not row:
+        raise HTTPException(status_code=404, detail="Categoría no encontrada")
+    return row
+
+
 # CRUD CATEGORIA
 
 async def get_all_categorias() -> (
@@ -33,16 +45,6 @@ async def get_all_categorias_borradas(usuario_actual) -> (
         raise HTTPException(
             status_code=500, detail="Error al obtener las categorias borradas. Intente nuevamente."
         )
-
-
-async def get_categoria_by_id(
-    id: int,
-) -> CategoriaOut:  # GET - Trae a la categoría con el id indicado
-    query = "SELECT * FROM categorias WHERE id = :id"
-    row = await db.fetch_one(query=query, values={"id": id})
-    if not row:
-        raise HTTPException(status_code=404, detail="Categoría no encontrada")
-    return row
 
 
 async def create_categoria(
@@ -149,7 +151,7 @@ async def delete_categoria(
     except Exception as e:
         print(f"Error al eliminar categoría: {e}")
         raise HTTPException(status_code=400, detail="Error al eliminar la categoría")
-    
+
 async def restore_categoria(
     id: int, usuario_actual
 ) -> dict:  # Restaurar una categoria borrada 
