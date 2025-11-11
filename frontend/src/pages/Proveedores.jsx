@@ -9,29 +9,23 @@ import {
   CircularProgress,
 } from "@mui/material";
 import { Add as AddIcon } from "@mui/icons-material";
-import ProductoTable from "../components/ProductoTable";
-import ProductoDialog from "../components/ProductoDialog";
+import ProveedorTable from "../components/ProveedorTable";
+import ProveedorDialog from "../components/ProveedorDialog";
 
-function Productos() {
-  const { authFetch, isAdmin } = useAuth();
-  const [productos, setProductos] = useState([]);
-  const [categorias, setCategorias] = useState([]);
+function Proveedores() {
+  const { authFetch } = useAuth();
   const [proveedores, setProveedores] = useState([]);
   const [loading, setLoading] = useState(true);
   const [openDialog, setOpenDialog] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  // Nuevos estados que faltaban 👇
   const [formData, setFormData] = useState({
-    codigo: "",
     nombre: "",
-    descripcion: "",
-    precio_compra: "",
-    precio_venta: "",
-    fk_categoria: "",
-    fk_proveedor: "",
-    stock_minimo: "",
+    telefono: "",
+    email: "",
+    direccion: "",
+    ciudad: "",
     activo: true,
   });
   const [editingId, setEditingId] = useState(null);
@@ -39,24 +33,18 @@ function Productos() {
   const itemsPerPage = 5;
 
   useEffect(() => {
-    cargarDatos();
+    cargarProveedores();
   }, []);
 
-  const cargarDatos = async () => {
+  const cargarProveedores = async () => {
     setLoading(true);
     try {
-      const resProductos = await authFetch("/productos");
-      if (!resProductos.ok) throw new Error("Error al cargar productos");
-      const dataProductos = await resProductos.json();
-      setProductos(dataProductos);
-
-      const resCategorias = await authFetch("/categorias");
-      if (resCategorias.ok) setCategorias(await resCategorias.json());
-
-      const resProveedores = await authFetch("/proveedores");
-      if (resProveedores.ok) setProveedores(await resProveedores.json());
+      const res = await authFetch("/proveedores");
+      if (!res.ok) throw new Error("Error al cargar proveedores");
+      const data = await res.json();
+      setProveedores(data);
     } catch (error) {
-      setError("Error al cargar datos");
+      setError("Error al cargar proveedores");
       console.error("Error:", error);
     } finally {
       setLoading(false);
@@ -67,30 +55,24 @@ function Productos() {
     setPage(newPage);
   };
 
-  const handleOpenDialog = (producto = null) => {
-    if (producto) {
+  const handleOpenDialog = (proveedor = null) => {
+    if (proveedor) {
       setFormData({
-        codigo: producto.codigo,
-        nombre: producto.nombre,
-        descripcion: producto.descripcion || "",
-        precio_compra: producto.precio_compra,
-        precio_venta: producto.precio_venta,
-        fk_categoria: producto.fk_categoria,
-        fk_proveedor: producto.fk_proveedor,
-        stock_minimo: producto.stock_minimo || "",
-        activo: producto.activo,
+        nombre: proveedor.nombre,
+        telefono: proveedor.telefono || "",
+        email: proveedor.email || "",
+        direccion: proveedor.direccion || "",
+        ciudad: proveedor.ciudad || "",
+        activo: proveedor.activo,
       });
-      setEditingId(producto.id);
+      setEditingId(proveedor.id);
     } else {
       setFormData({
-        codigo: "",
         nombre: "",
-        descripcion: "",
-        precio_compra: "",
-        precio_venta: "",
-        fk_categoria: "",
-        fk_proveedor: "",
-        stock_minimo: "",
+        telefono: "",
+        email: "",
+        direccion: "",
+        ciudad: "",
         activo: true,
       });
       setEditingId(null);
@@ -107,10 +89,10 @@ function Productos() {
   };
 
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
+    const { name, value } = e.target;
     setFormData({
       ...formData,
-      [name]: type === "checkbox" ? checked : value,
+      [name]: value,
     });
   };
 
@@ -120,7 +102,7 @@ function Productos() {
     setSuccess("");
 
     try {
-      const url = editingId ? `/productos/${editingId}` : "/productos";
+      const url = editingId ? `/proveedores/${editingId}` : "/proveedores";
       const method = editingId ? "PUT" : "POST";
 
       const res = await authFetch(url, {
@@ -131,15 +113,15 @@ function Productos() {
 
       if (!res.ok) {
         const errorData = await res.json();
-        throw new Error(errorData.detail || "Error al guardar producto");
+        throw new Error(errorData.detail || "Error al guardar proveedor");
       }
 
       setSuccess(
         editingId
-          ? "Producto actualizado correctamente"
-          : "Producto creado correctamente"
+          ? "Proveedor actualizado correctamente"
+          : "Proveedor creado correctamente"
       );
-      await cargarDatos();
+      await cargarProveedores();
       setTimeout(() => {
         handleCloseDialog();
       }, 1500);
@@ -149,14 +131,14 @@ function Productos() {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("¿Está seguro de eliminar este producto?")) return;
+    if (!window.confirm("¿Está seguro de eliminar este proveedor?")) return;
 
     try {
-      const res = await authFetch(`/productos/${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Error al eliminar producto");
+      const res = await authFetch(`/proveedores/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Error al eliminar proveedor");
 
-      setSuccess("Producto eliminado correctamente");
-      await cargarDatos();
+      setSuccess("Proveedor eliminado correctamente");
+      await cargarProveedores();
       setTimeout(() => setSuccess(""), 3000);
     } catch (error) {
       setError(error.message);
@@ -177,7 +159,8 @@ function Productos() {
       </Box>
     );
   }
-  const totalPages = Math.ceil(productos.length / itemsPerPage);
+
+  const totalPages = Math.ceil(proveedores.length / itemsPerPage);
 
   return (
     <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
@@ -192,22 +175,20 @@ function Productos() {
       >
         <Box>
           <Typography variant="h4" fontWeight="bold" gutterBottom>
-            Productos
+            Proveedores
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Gestiona y visualiza todos tus productos
+            Gestiona los proveedores del sistema
           </Typography>
         </Box>
-        {isAdmin && (
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => handleOpenDialog()}
-            sx={{ borderRadius: 2 }}
-          >
-            Nuevo Producto
-          </Button>
-        )}
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          onClick={() => handleOpenDialog()}
+          sx={{ borderRadius: 2 }}
+        >
+          Nuevo Proveedor
+        </Button>
       </Box>
 
       {/* Mensajes */}
@@ -222,26 +203,24 @@ function Productos() {
         </Alert>
       )}
 
-      <ProductoTable
-        productos={productos}
-        categorias={categorias}
-        isAdmin={isAdmin}
-        handleOpenDialog={handleOpenDialog}
-        handleDelete={handleDelete}
+      {/* Tabla */}
+      <ProveedorTable
+        proveedores={proveedores}
         page={page}
         handleChangePage={handleChangePage}
         itemsPerPage={itemsPerPage}
         totalPages={totalPages}
+        handleOpenDialog={handleOpenDialog}
+        handleDelete={handleDelete}
       />
 
-      <ProductoDialog
+      {/* Dialog */}
+      <ProveedorDialog
         open={openDialog}
         onClose={handleCloseDialog}
         formData={formData}
         onChange={handleChange}
         onSubmit={handleSubmit}
-        categorias={categorias}
-        proveedores={proveedores}
         editingId={editingId}
         error={error}
         success={success}
@@ -250,4 +229,4 @@ function Productos() {
   );
 }
 
-export default Productos;
+export default Proveedores;

@@ -42,10 +42,7 @@ function ProductoTable({
         <Table>
           <TableHead sx={{ backgroundColor: "primary.light" }}>
             <TableRow>
-              <TableCell>
-                <InventoryIcon sx={{ verticalAlign: "middle", mr: 1 }} />
-                Código
-              </TableCell>
+              <TableCell>Código</TableCell>
               <TableCell>Producto</TableCell>
               <TableCell>Categoría</TableCell>
               <TableCell align="right">Precio Compra</TableCell>

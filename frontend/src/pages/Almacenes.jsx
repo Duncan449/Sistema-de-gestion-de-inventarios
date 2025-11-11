@@ -9,29 +9,20 @@ import {
   CircularProgress,
 } from "@mui/material";
 import { Add as AddIcon } from "@mui/icons-material";
-import ProductoTable from "../components/ProductoTable";
-import ProductoDialog from "../components/ProductoDialog";
+import AlmacenTable from "../components/AlmacenTable";
+import AlmacenDialog from "../components/AlmacenDialog";
 
-function Productos() {
-  const { authFetch, isAdmin } = useAuth();
-  const [productos, setProductos] = useState([]);
-  const [categorias, setCategorias] = useState([]);
-  const [proveedores, setProveedores] = useState([]);
+function Almacenes() {
+  const { authFetch } = useAuth();
+  const [almacenes, setAlmacenes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [openDialog, setOpenDialog] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  // Nuevos estados que faltaban 👇
   const [formData, setFormData] = useState({
-    codigo: "",
     nombre: "",
-    descripcion: "",
-    precio_compra: "",
-    precio_venta: "",
-    fk_categoria: "",
-    fk_proveedor: "",
-    stock_minimo: "",
+    ubicacion: "",
     activo: true,
   });
   const [editingId, setEditingId] = useState(null);
@@ -39,24 +30,18 @@ function Productos() {
   const itemsPerPage = 5;
 
   useEffect(() => {
-    cargarDatos();
+    cargarAlmacenes();
   }, []);
 
-  const cargarDatos = async () => {
+  const cargarAlmacenes = async () => {
     setLoading(true);
     try {
-      const resProductos = await authFetch("/productos");
-      if (!resProductos.ok) throw new Error("Error al cargar productos");
-      const dataProductos = await resProductos.json();
-      setProductos(dataProductos);
-
-      const resCategorias = await authFetch("/categorias");
-      if (resCategorias.ok) setCategorias(await resCategorias.json());
-
-      const resProveedores = await authFetch("/proveedores");
-      if (resProveedores.ok) setProveedores(await resProveedores.json());
+      const res = await authFetch("/almacenes");
+      if (!res.ok) throw new Error("Error al cargar almacenes");
+      const data = await res.json();
+      setAlmacenes(data);
     } catch (error) {
-      setError("Error al cargar datos");
+      setError("Error al cargar almacenes");
       console.error("Error:", error);
     } finally {
       setLoading(false);
@@ -67,30 +52,18 @@ function Productos() {
     setPage(newPage);
   };
 
-  const handleOpenDialog = (producto = null) => {
-    if (producto) {
+  const handleOpenDialog = (almacen = null) => {
+    if (almacen) {
       setFormData({
-        codigo: producto.codigo,
-        nombre: producto.nombre,
-        descripcion: producto.descripcion || "",
-        precio_compra: producto.precio_compra,
-        precio_venta: producto.precio_venta,
-        fk_categoria: producto.fk_categoria,
-        fk_proveedor: producto.fk_proveedor,
-        stock_minimo: producto.stock_minimo || "",
-        activo: producto.activo,
+        nombre: almacen.nombre,
+        ubicacion: almacen.ubicacion,
+        activo: almacen.activo,
       });
-      setEditingId(producto.id);
+      setEditingId(almacen.id);
     } else {
       setFormData({
-        codigo: "",
         nombre: "",
-        descripcion: "",
-        precio_compra: "",
-        precio_venta: "",
-        fk_categoria: "",
-        fk_proveedor: "",
-        stock_minimo: "",
+        ubicacion: "",
         activo: true,
       });
       setEditingId(null);
@@ -107,10 +80,10 @@ function Productos() {
   };
 
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
+    const { name, value } = e.target;
     setFormData({
       ...formData,
-      [name]: type === "checkbox" ? checked : value,
+      [name]: value,
     });
   };
 
@@ -120,7 +93,7 @@ function Productos() {
     setSuccess("");
 
     try {
-      const url = editingId ? `/productos/${editingId}` : "/productos";
+      const url = editingId ? `/almacenes/${editingId}` : "/almacenes";
       const method = editingId ? "PUT" : "POST";
 
       const res = await authFetch(url, {
@@ -131,15 +104,15 @@ function Productos() {
 
       if (!res.ok) {
         const errorData = await res.json();
-        throw new Error(errorData.detail || "Error al guardar producto");
+        throw new Error(errorData.detail || "Error al guardar almacén");
       }
 
       setSuccess(
         editingId
-          ? "Producto actualizado correctamente"
-          : "Producto creado correctamente"
+          ? "Almacén actualizado correctamente"
+          : "Almacén creado correctamente"
       );
-      await cargarDatos();
+      await cargarAlmacenes();
       setTimeout(() => {
         handleCloseDialog();
       }, 1500);
@@ -149,14 +122,14 @@ function Productos() {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("¿Está seguro de eliminar este producto?")) return;
+    if (!window.confirm("¿Está seguro de eliminar este almacén?")) return;
 
     try {
-      const res = await authFetch(`/productos/${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Error al eliminar producto");
+      const res = await authFetch(`/almacenes/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Error al eliminar almacén");
 
-      setSuccess("Producto eliminado correctamente");
-      await cargarDatos();
+      setSuccess("Almacén eliminado correctamente");
+      await cargarAlmacenes();
       setTimeout(() => setSuccess(""), 3000);
     } catch (error) {
       setError(error.message);
@@ -177,7 +150,8 @@ function Productos() {
       </Box>
     );
   }
-  const totalPages = Math.ceil(productos.length / itemsPerPage);
+
+  const totalPages = Math.ceil(almacenes.length / itemsPerPage);
 
   return (
     <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
@@ -192,22 +166,20 @@ function Productos() {
       >
         <Box>
           <Typography variant="h4" fontWeight="bold" gutterBottom>
-            Productos
+            Almacenes
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Gestiona y visualiza todos tus productos
+            Gestiona los almacenes del sistema
           </Typography>
         </Box>
-        {isAdmin && (
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => handleOpenDialog()}
-            sx={{ borderRadius: 2 }}
-          >
-            Nuevo Producto
-          </Button>
-        )}
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          onClick={() => handleOpenDialog()}
+          sx={{ borderRadius: 2 }}
+        >
+          Nuevo Almacén
+        </Button>
       </Box>
 
       {/* Mensajes */}
@@ -222,26 +194,24 @@ function Productos() {
         </Alert>
       )}
 
-      <ProductoTable
-        productos={productos}
-        categorias={categorias}
-        isAdmin={isAdmin}
-        handleOpenDialog={handleOpenDialog}
-        handleDelete={handleDelete}
+      {/* Tabla */}
+      <AlmacenTable
+        almacenes={almacenes}
         page={page}
         handleChangePage={handleChangePage}
         itemsPerPage={itemsPerPage}
         totalPages={totalPages}
+        handleOpenDialog={handleOpenDialog}
+        handleDelete={handleDelete}
       />
 
-      <ProductoDialog
+      {/* Dialog */}
+      <AlmacenDialog
         open={openDialog}
         onClose={handleCloseDialog}
         formData={formData}
         onChange={handleChange}
         onSubmit={handleSubmit}
-        categorias={categorias}
-        proveedores={proveedores}
         editingId={editingId}
         error={error}
         success={success}
@@ -250,4 +220,4 @@ function Productos() {
   );
 }
 
-export default Productos;
+export default Almacenes;
