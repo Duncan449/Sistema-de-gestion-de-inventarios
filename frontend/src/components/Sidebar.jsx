@@ -12,6 +12,9 @@ import {
   Warehouse as WarehouseIcon,
   People as PeopleIcon,
   Logout as LogoutIcon,
+  AllInbox as AllInboxIcon,
+  ManageAccounts as ManageAccountsIcon,
+  SwapHoriz as SwapHorizIcon,
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
@@ -77,9 +80,25 @@ function Sidebar({ handleLogout }) {
               label="Productos"
               onClick={() => navigate("/productos")}
             />
+            <SidebarButton
+              icon={<AllInboxIcon />}
+              label="Stock Almacén"
+              onClick={() => navigate("/stock-almacen")}
+            />
+            <SidebarButton
+              icon={<SwapHorizIcon />}
+              label="Movimientos"
+              onClick={() => navigate("/movimientos")}
+            />
 
             {isAdmin && (
               <>
+                <Divider
+                  sx={{
+                    my: 1,
+                    borderColor: "rgba(255,255,255,0.2)",
+                  }}
+                />
                 <SidebarButton
                   icon={<WarehouseIcon />}
                   label="Almacenes"
@@ -89,6 +108,11 @@ function Sidebar({ handleLogout }) {
                   icon={<PeopleIcon />}
                   label="Proveedores"
                   onClick={() => navigate("/proveedores")}
+                />
+                <SidebarButton
+                  icon={<ManageAccountsIcon />}
+                  label="Usuarios"
+                  onClick={() => navigate("/usuarios")}
                 />
               </>
             )}

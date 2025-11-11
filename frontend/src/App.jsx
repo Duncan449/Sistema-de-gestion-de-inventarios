@@ -1,10 +1,13 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./auth/AuthContext";
-import { ProtectedRoute } from "./auth/PrivateRoute";
+import { ProtectedRoute, AdminRoute } from "./auth/PrivateRoute";
 import Login from "./auth/Login";
 import DashboardLayout from "./layouts/DashboardLayout";
 import Dashboard from "./pages/Dashboard";
 import Productos from "./pages/Productos";
+import StockAlmacen from "./pages/StockAlmacen";
+import Usuarios from "./pages/Usuarios";
+import MovimientosInventario from "./pages/MovimientosInventario";
 
 function App() {
   return (
@@ -35,6 +38,41 @@ function App() {
                   <Productos />
                 </DashboardLayout>
               </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/stock-almacen"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <StockAlmacen />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Ruta de movimientos para TODOS los usuarios autenticados */}
+          <Route
+            path="/movimientos"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <MovimientosInventario />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Ruta solo para admin */}
+          <Route
+            path="/usuarios"
+            element={
+              <AdminRoute>
+                <DashboardLayout>
+                  <Usuarios />
+                </DashboardLayout>
+              </AdminRoute>
             }
           />
 

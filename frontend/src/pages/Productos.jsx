@@ -9,7 +9,6 @@ import {
   CircularProgress,
 } from "@mui/material";
 import { Add as AddIcon } from "@mui/icons-material";
-import ProductoStats from "../components/ProductoStats";
 import ProductoTable from "../components/ProductoTable";
 import ProductoDialog from "../components/ProductoDialog";
 
@@ -22,7 +21,6 @@ function Productos() {
   const [openDialog, setOpenDialog] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const [stats, setStats] = useState({ total: 0, activos: 0, valorTotal: 0 });
 
   // Nuevos estados que faltaban 👇
   const [formData, setFormData] = useState({
@@ -73,7 +71,6 @@ function Productos() {
     const total = productos.length;
     const activos = productos.filter((p) => p.activo).length;
     const valorTotal = productos.reduce((sum, p) => sum + p.precio_venta, 0);
-    setStats({ total, activos, valorTotal });
   };
 
   const handleChangePage = (event, newPage) => {
@@ -223,10 +220,17 @@ function Productos() {
         )}
       </Box>
 
-      {error && <Alert severity="error">{error}</Alert>}
-      {success && <Alert severity="success">{success}</Alert>}
-
-      <ProductoStats stats={stats} />
+      {/* Mensajes */}
+      {error && (
+        <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError("")}>
+          {error}
+        </Alert>
+      )}
+      {success && (
+        <Alert severity="success" sx={{ mb: 3 }} onClose={() => setSuccess("")}>
+          {success}
+        </Alert>
+      )}
 
       <ProductoTable
         productos={productos}
