@@ -4,6 +4,17 @@ from app.config.database import db
 from app.schemas.producto import ProductoIn, ProductoOut
 
 
+# Función auxiliar
+async def get_producto_by_id(
+    id: int,
+) -> ProductoOut:  # GET - Trae al producto con el id indicado
+    query = "SELECT * FROM productos WHERE id = :id"
+    row = await db.fetch_one(query=query, values={"id": id})
+    if not row:
+        raise HTTPException(status_code=404, detail="Producto no encontrado")
+    return row
+
+
 # VALIDACIONES
 
 
@@ -72,7 +83,7 @@ async def get_all_productos() -> (
         raise HTTPException(
             status_code=500, detail="Error al obtener los productos. Intente nuevamente."
         )
-    
+
 async def get_all_productos_borrados(usuario_actual) -> (
     List[ProductoOut]
 ):  # GET - Trae a todos los productos borrados de la BD
@@ -89,16 +100,6 @@ async def get_all_productos_borrados(usuario_actual) -> (
         raise HTTPException(
             status_code=500, detail="Error al obtener los productos borrados. Intente nuevamente."
         )
-
-
-async def get_producto_by_id(
-    id: int,
-) -> ProductoOut:  # GET - Trae al producto con el id indicado
-    query = "SELECT * FROM productos WHERE id = :id"
-    row = await db.fetch_one(query=query, values={"id": id})
-    if not row:
-        raise HTTPException(status_code=404, detail="Producto no encontrado")
-    return row
 
 
 async def create_producto(
@@ -228,7 +229,7 @@ async def delete_producto(
     except Exception as e:
         print(f"Error al eliminar producto: {e}")
         raise HTTPException(status_code=400, detail="Error al eliminar el producto")
-    
+
 async def restore_producto(
     id: int, usuario_actual
 ) -> dict:  # POST- Restaurar un producto borrado 

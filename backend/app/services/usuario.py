@@ -3,8 +3,23 @@ from fastapi import HTTPException
 from app.config.database import db
 from app.schemas.usuario import UsuarioIn, UsuarioOut, UsuarioUpdate
 
-# CRUD USUARIOS
 
+# Función auxiliar
+async def get_usuario_by_id(
+    id: int,
+) -> UsuarioOut:  # GET - Trae al usuario con el id indicado
+
+    try:
+        query = "SELECT * FROM usuarios WHERE id = :id"
+        row = await db.fetch_one(query=query, values={"id": id})
+        if not row:
+            raise HTTPException(status_code=404, detail="Usuario no encontrado")
+        return row
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al obtener el usuario: {e}")
+
+
+# CRUD USUARIOS
 
 async def get_all_usuarios(usuario_actual) -> (
     List[UsuarioOut]
@@ -18,7 +33,7 @@ async def get_all_usuarios(usuario_actual) -> (
         return rows
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al obtener usuarios: {e}")
-    
+
 async def get_all_usuarios_borrados(usuario_actual) -> (
     List[UsuarioOut]
 ):  # GET - Trae a todos los usuarios borrados de la BD
@@ -31,20 +46,6 @@ async def get_all_usuarios_borrados(usuario_actual) -> (
         return rows
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al obtener usuarios borrados: {e}")
-
-
-async def get_usuario_by_id(
-    id: int,
-) -> UsuarioOut:  # GET - Trae al usuario con el id indicado
-
-    try:
-        query = "SELECT * FROM usuarios WHERE id = :id"
-        row = await db.fetch_one(query=query, values={"id": id})
-        if not row:
-            raise HTTPException(status_code=404, detail="Usuario no encontrado")
-        return row
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error al obtener el usuario: {e}")
 
 
 async def update_usuario(
@@ -121,7 +122,7 @@ async def delete_usuario(
     except Exception as e:
         print(f"Error al eliminar usuario: {e}")
         raise HTTPException(status_code=400, detail="Error al eliminar el usuario")
-    
+
 async def restore_usuario(
     id: int, usuario_actual
 ) -> dict:  # PUT - Restaura el usuario con el id indicado

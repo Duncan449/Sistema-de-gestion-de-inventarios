@@ -18,10 +18,6 @@ async def read_categorias(usuario_actual=Depends(require_auth)):
 async def read_categorias_borradas(usuario_actual=Depends(require_auth)):
     return await service.get_all_categorias_borradas(usuario_actual)
 
-@router.get("/{id}", response_model=CategoriaOut)
-async def read_categoria(id: int, usuario_actual=Depends(require_auth)):
-    return await service.get_categoria_by_id(id)
-
 
 @router.post("/", response_model=CategoriaOut)
 async def create_categoria(
