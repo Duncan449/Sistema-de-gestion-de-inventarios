@@ -15,6 +15,7 @@ import {
   AllInbox as AllInboxIcon,
   ManageAccounts as ManageAccountsIcon,
   SwapHoriz as SwapHorizIcon,
+  Category as CategoryIcon,
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
@@ -93,16 +94,15 @@ function Sidebar({ handleLogout }) {
 
             {isAdmin && (
               <>
-                <Divider
-                  sx={{
-                    my: 1,
-                    borderColor: "rgba(255,255,255,0.2)",
-                  }}
-                />
                 <SidebarButton
                   icon={<WarehouseIcon />}
                   label="Almacenes"
                   onClick={() => navigate("/almacenes")}
+                />
+                <SidebarButton
+                  icon={<CategoryIcon />}
+                  label="Categorías"
+                  onClick={() => navigate("/categorias")}
                 />
                 <SidebarButton
                   icon={<PeopleIcon />}

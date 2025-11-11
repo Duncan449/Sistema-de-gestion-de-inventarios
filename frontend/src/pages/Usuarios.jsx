@@ -34,10 +34,6 @@ function Usuarios() {
     cargarUsuarios();
   }, []);
 
-  useEffect(() => {
-    calcularEstadisticas();
-  }, [usuarios]);
-
   const cargarUsuarios = async () => {
     setLoading(true);
     try {
@@ -51,12 +47,6 @@ function Usuarios() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const calcularEstadisticas = () => {
-    const total = usuarios.length;
-    const admins = usuarios.filter((u) => u.rol === "admin").length;
-    const empleados = usuarios.filter((u) => u.rol === "empleado").length;
   };
 
   const handleChangePage = (event, newPage) => {

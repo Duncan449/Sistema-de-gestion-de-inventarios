@@ -45,10 +45,6 @@ function MovimientosInventario() {
     cargarDatosIniciales();
   }, []);
 
-  useEffect(() => {
-    calcularEstadisticas();
-  }, [movimientos]);
-
   const cargarDatosIniciales = async () => {
     setLoading(true);
     try {
@@ -76,21 +72,6 @@ function MovimientosInventario() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const calcularEstadisticas = () => {
-    const total = movimientos.length;
-    const entradas = movimientos.filter(
-      (m) => m.tipo_movimiento === "entrada"
-    ).length;
-    const salidas = movimientos.filter(
-      (m) => m.tipo_movimiento === "salida"
-    ).length;
-    const ajustes = movimientos.filter(
-      (m) =>
-        m.tipo_movimiento === "ajuste" || m.tipo_movimiento === "devolucion"
-    ).length;
-    setStats({ total, entradas, salidas, ajustes });
   };
 
   const handleChangePage = (event, newPage) => {
@@ -156,6 +137,7 @@ function MovimientosInventario() {
 
       if (!res.ok) {
         const errorData = await res.json();
+        console.log("Error data:", errorData); // <--- agregar esta línea
         throw new Error(errorData.detail || "Error al registrar movimiento");
       }
 
@@ -228,9 +210,6 @@ function MovimientosInventario() {
           {success}
         </Alert>
       )}
-
-      {/* Estadísticas */}
-      <MovimientoStats stats={stats} />
 
       {/* Tabla */}
       <MovimientoTable

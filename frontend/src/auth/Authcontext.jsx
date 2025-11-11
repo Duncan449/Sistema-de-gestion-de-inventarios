@@ -7,6 +7,7 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null); //Estado para almacenar el usuario autenticado
   const [loading, setLoading] = useState(true); //Estado para indicar si se está verificando la autenticación
   const API_URL = "http://localhost:8000"; //URL del backend FastAPI
+  const [token, setToken] = useState(localStorage.getItem("token") || "");
 
   //Verificar si hay token al cargar la app
   const checkAuth = async () => {
@@ -48,47 +49,28 @@ export const AuthProvider = ({ children }) => {
   //Login: obtiene el token y guarda usuario
   const login = async (email, password) => {
     try {
-      const formData = new FormData();
-      formData.append("username", email); //El backend usa email como username
-      formData.append("password", password);
-
-      //Hacer petición al endpoint de login
       const res = await fetch(`${API_URL}/auth/login`, {
         method: "POST",
-        body: formData, //Enviar datos como FormData
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({ username: email, password }),
       });
 
-      //Si la respuesta no es ok, manejar error
       if (!res.ok) {
-        const errorData = await res.json(); //Obtener mensaje de error
-        return { error: errorData.detail || "Error al iniciar sesión" }; //Retornar error
+        const data = await res.json();
+        return { error: data.detail || "Credenciales inválidas" };
       }
 
-      const data = await res.json(); //Respuesta con el token
-      localStorage.setItem("token", data.access_token); //Guardar token en localStorage
+      const data = await res.json();
+      setToken(data.access_token);
+      localStorage.setItem("token", data.access_token);
 
-      // Obtener los datos del usuario autenticado
-      const usuariosRes = await fetch(`${API_URL}/usuarios`, {
-        headers: { Authorization: `Bearer ${data.access_token}` }, //Incluir token en la cabecera
-      });
+      // Cargar el usuario actual
+      await fetchUserData(data.access_token);
 
-      if (!usuariosRes.ok) {
-        throw new Error("Error al obtener datos del usuario");
-      }
-
-      const usuarios = await usuariosRes.json();
-      const payload = JSON.parse(atob(data.access_token.split(".")[1])); //Decodificar token
-      const usuarioActual = usuarios.find((u) => u.email === payload.sub); //Buscar usuario actual
-
-      if (usuarioActual) {
-        setUser(usuarioActual);
-        return { success: true, user: usuarioActual };
-      } else {
-        throw new Error("Usuario no encontrado");
-      }
-    } catch (error) {
-      console.error("Error en login:", error);
-      return { error: error.message || "Error al iniciar sesión" };
+      return { success: true };
+    } catch (err) {
+      console.error("Error en login:", err);
+      return { error: "Error al conectar con el servidor" };
     }
   };
 
@@ -151,6 +133,23 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       console.error("Error en authFetch:", error);
       throw error;
+    }
+  };
+
+  // Obtener los datos del usuario autenticado desde el backend
+  const fetchUserData = async (token) => {
+    try {
+      const res = await fetch(`${API_URL}/auth/me`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!res.ok) throw new Error("Error al obtener datos del usuario");
+
+      const userData = await res.json();
+      setUser(userData);
+    } catch (err) {
+      console.error("Error al cargar datos del usuario:", err);
+      setUser(null);
     }
   };
 

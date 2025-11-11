@@ -17,7 +17,7 @@ function Login() {
     Función componente llamada Login, ya que en react, los componentes
     funcionales son funciones que devuelven JSX (la estructura que se renderiza)
 */
-  const [formData, setFormData] = useState({ usuario: "", contraseña: "" });
+  const [formData, setFormData] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
@@ -57,10 +57,10 @@ cambiando solo la propiedad cuyo nombre viene en name. Esto permite usar un solo
 
   //Maneja el envío del formulario
   const handleSubmit = async (e) => {
-    e.preventDefault(); //Evita que el formulario haga la recarga de la página (comportamiento por defecto)
+    e.preventDefault();
     setError("");
 
-    if (!formData.usuario || !formData.contraseña) {
+    if (!formData.email || !formData.password) {
       setError("Por favor complete ambos campos");
       return;
     }
@@ -68,8 +68,7 @@ cambiando solo la propiedad cuyo nombre viene en name. Esto permite usar un solo
     setLoading(true); //Indica que se está procesando el login
 
     try {
-      const result = await login(formData.usuario, formData.contraseña); //Llama a la función login del hook useAuth
-
+      const result = await login(formData.email, formData.password);
       if (result.error) {
         //Si hay un error en el login, lo muestra
         setError(result.error);
@@ -127,8 +126,8 @@ cambiando solo la propiedad cuyo nombre viene en name. Esto permite usar un solo
           sx={{ display: "flex", flexDirection: "column", gap: 2 }} //Organiza los hijos en columna y agrega espacio entre ellos
         >
           <TextField
-            label="Usuario"
-            name="usuario"
+            label="Email"
+            name="email" //Nombre del campo para identificarlo en handleChange
             value={formData.usuario} //Valor controlado por formData.usuario
             onChange={handleChange} //Actualiza el estado cuando el usuario escribe
             variant="outlined" //Estilo del TextField
@@ -137,7 +136,7 @@ cambiando solo la propiedad cuyo nombre viene en name. Esto permite usar un solo
           />
           <TextField
             label="Contraseña"
-            name="contraseña"
+            name="password" //Nombre del campo para identificarlo en handleChange
             type="password" //Oculta el texto ingresado
             value={formData.contraseña}
             onChange={handleChange}

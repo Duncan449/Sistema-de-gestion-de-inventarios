@@ -9,54 +9,39 @@ import {
   CircularProgress,
 } from "@mui/material";
 import { Add as AddIcon } from "@mui/icons-material";
-import ProductoTable from "../components/ProductoTable";
-import ProductoDialog from "../components/ProductoDialog";
+import CategoriaTable from "../components/CategoriaTable";
+import CategoriaDialog from "../components/CategoriaDialog";
 
-function Productos() {
-  const { authFetch, isAdmin } = useAuth();
-  const [productos, setProductos] = useState([]);
+function Categorias() {
+  const { authFetch } = useAuth();
   const [categorias, setCategorias] = useState([]);
-  const [proveedores, setProveedores] = useState([]);
   const [loading, setLoading] = useState(true);
   const [openDialog, setOpenDialog] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  // Nuevos estados que faltaban 👇
   const [formData, setFormData] = useState({
-    codigo: "",
     nombre: "",
     descripcion: "",
-    precio_compra: "",
-    precio_venta: "",
-    fk_categoria: "",
-    fk_proveedor: "",
-    stock_minimo: "",
-    activo: true,
+    activa: true,
   });
   const [editingId, setEditingId] = useState(null);
   const [page, setPage] = useState(1);
   const itemsPerPage = 5;
 
   useEffect(() => {
-    cargarDatos();
+    cargarCategorias();
   }, []);
 
-  const cargarDatos = async () => {
+  const cargarCategorias = async () => {
     setLoading(true);
     try {
-      const resProductos = await authFetch("/productos");
-      if (!resProductos.ok) throw new Error("Error al cargar productos");
-      const dataProductos = await resProductos.json();
-      setProductos(dataProductos);
-
-      const resCategorias = await authFetch("/categorias");
-      if (resCategorias.ok) setCategorias(await resCategorias.json());
-
-      const resProveedores = await authFetch("/proveedores");
-      if (resProveedores.ok) setProveedores(await resProveedores.json());
+      const res = await authFetch("/categorias");
+      if (!res.ok) throw new Error("Error al cargar categorías");
+      const data = await res.json();
+      setCategorias(data);
     } catch (error) {
-      setError("Error al cargar datos");
+      setError("Error al cargar categorías");
       console.error("Error:", error);
     } finally {
       setLoading(false);
@@ -67,31 +52,19 @@ function Productos() {
     setPage(newPage);
   };
 
-  const handleOpenDialog = (producto = null) => {
-    if (producto) {
+  const handleOpenDialog = (categoria = null) => {
+    if (categoria) {
       setFormData({
-        codigo: producto.codigo,
-        nombre: producto.nombre,
-        descripcion: producto.descripcion || "",
-        precio_compra: producto.precio_compra,
-        precio_venta: producto.precio_venta,
-        fk_categoria: producto.fk_categoria,
-        fk_proveedor: producto.fk_proveedor,
-        stock_minimo: producto.stock_minimo || "",
-        activo: producto.activo,
+        nombre: categoria.nombre,
+        descripcion: categoria.descripcion || "",
+        activa: categoria.activa,
       });
-      setEditingId(producto.id);
+      setEditingId(categoria.id);
     } else {
       setFormData({
-        codigo: "",
         nombre: "",
         descripcion: "",
-        precio_compra: "",
-        precio_venta: "",
-        fk_categoria: "",
-        fk_proveedor: "",
-        stock_minimo: "",
-        activo: true,
+        activa: true,
       });
       setEditingId(null);
     }
@@ -107,10 +80,10 @@ function Productos() {
   };
 
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
+    const { name, value } = e.target;
     setFormData({
       ...formData,
-      [name]: type === "checkbox" ? checked : value,
+      [name]: value,
     });
   };
 
@@ -120,7 +93,7 @@ function Productos() {
     setSuccess("");
 
     try {
-      const url = editingId ? `/productos/${editingId}` : "/productos";
+      const url = editingId ? `/categorias/${editingId}` : "/categorias";
       const method = editingId ? "PUT" : "POST";
 
       const res = await authFetch(url, {
@@ -131,15 +104,15 @@ function Productos() {
 
       if (!res.ok) {
         const errorData = await res.json();
-        throw new Error(errorData.detail || "Error al guardar producto");
+        throw new Error(errorData.detail || "Error al guardar categoría");
       }
 
       setSuccess(
         editingId
-          ? "Producto actualizado correctamente"
-          : "Producto creado correctamente"
+          ? "Categoría actualizada correctamente"
+          : "Categoría creada correctamente"
       );
-      await cargarDatos();
+      await cargarCategorias();
       setTimeout(() => {
         handleCloseDialog();
       }, 1500);
@@ -149,14 +122,14 @@ function Productos() {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("¿Está seguro de eliminar este producto?")) return;
+    if (!window.confirm("¿Está seguro de eliminar esta categoría?")) return;
 
     try {
-      const res = await authFetch(`/productos/${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Error al eliminar producto");
+      const res = await authFetch(`/categorias/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Error al eliminar categoría");
 
-      setSuccess("Producto eliminado correctamente");
-      await cargarDatos();
+      setSuccess("Categoría eliminada correctamente");
+      await cargarCategorias();
       setTimeout(() => setSuccess(""), 3000);
     } catch (error) {
       setError(error.message);
@@ -177,7 +150,8 @@ function Productos() {
       </Box>
     );
   }
-  const totalPages = Math.ceil(productos.length / itemsPerPage);
+
+  const totalPages = Math.ceil(categorias.length / itemsPerPage);
 
   return (
     <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
@@ -192,22 +166,20 @@ function Productos() {
       >
         <Box>
           <Typography variant="h4" fontWeight="bold" gutterBottom>
-            Productos
+            Categorías
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Gestiona y visualiza todos tus productos
+            Gestiona las categorías de productos
           </Typography>
         </Box>
-        {isAdmin && (
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => handleOpenDialog()}
-            sx={{ borderRadius: 2 }}
-          >
-            Nuevo Producto
-          </Button>
-        )}
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          onClick={() => handleOpenDialog()}
+          sx={{ borderRadius: 2 }}
+        >
+          Nueva Categoría
+        </Button>
       </Box>
 
       {/* Mensajes */}
@@ -222,26 +194,24 @@ function Productos() {
         </Alert>
       )}
 
-      <ProductoTable
-        productos={productos}
+      {/* Tabla */}
+      <CategoriaTable
         categorias={categorias}
-        isAdmin={isAdmin}
-        handleOpenDialog={handleOpenDialog}
-        handleDelete={handleDelete}
         page={page}
         handleChangePage={handleChangePage}
         itemsPerPage={itemsPerPage}
         totalPages={totalPages}
+        handleOpenDialog={handleOpenDialog}
+        handleDelete={handleDelete}
       />
 
-      <ProductoDialog
+      {/* Dialog */}
+      <CategoriaDialog
         open={openDialog}
         onClose={handleCloseDialog}
         formData={formData}
         onChange={handleChange}
         onSubmit={handleSubmit}
-        categorias={categorias}
-        proveedores={proveedores}
         editingId={editingId}
         error={error}
         success={success}
@@ -250,4 +220,4 @@ function Productos() {
   );
 }
 
-export default Productos;
+export default Categorias;
