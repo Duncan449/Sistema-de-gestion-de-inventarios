@@ -256,6 +256,7 @@ function Productos() {
       <ProductoTable
         productos={productos}
         categorias={categorias}
+        proveedores={proveedores}
         isAdmin={isAdmin} // Pasar la prop isAdmin
         handleOpenDialog={handleOpenDialog}
         handleDelete={handleDelete}

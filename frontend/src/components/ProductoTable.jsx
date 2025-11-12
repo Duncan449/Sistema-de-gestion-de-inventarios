@@ -23,6 +23,7 @@ import {
 function ProductoTable({
   productos,
   categorias,
+  proveedores,
   page,
   totalPages,
   itemsPerPage,
@@ -47,6 +48,7 @@ function ProductoTable({
               <TableCell>Código</TableCell>
               <TableCell>Producto</TableCell>
               <TableCell>Categoría</TableCell>
+              <TableCell>Proveedor</TableCell>
               <TableCell align="right">Precio Compra</TableCell>
               <TableCell align="right">Precio Venta</TableCell>
               {isAdmin && <TableCell align="center">Estado</TableCell>}
@@ -112,6 +114,21 @@ function ProductoTable({
                       }
                       size="small"
                       variant="outlined"
+                    />
+                  </TableCell>
+                  <TableCell
+                    sx={{
+                      textDecoration: producto.activo ? "none" : "line-through",
+                    }}
+                  >
+                    <Chip
+                      label={
+                        proveedores.find((p) => p.id === producto.fk_proveedor)
+                          ?.nombre || "N/A"
+                      }
+                      size="small"
+                      variant="outlined"
+                      color="secondary"
                     />
                   </TableCell>
                   <TableCell
