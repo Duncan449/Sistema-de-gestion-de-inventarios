@@ -22,12 +22,6 @@ function MovimientosInventario() {
   const [openDialog, setOpenDialog] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const [stats, setStats] = useState({
-    total: 0,
-    entradas: 0,
-    salidas: 0,
-    ajustes: 0,
-  });
 
   const [formData, setFormData] = useState({
     fk_producto: "",
@@ -137,7 +131,6 @@ function MovimientosInventario() {
 
       if (!res.ok) {
         const errorData = await res.json();
-        console.log("Error data:", errorData); // <--- agregar esta línea
         throw new Error(errorData.detail || "Error al registrar movimiento");
       }
 
@@ -220,6 +213,7 @@ function MovimientosInventario() {
         handleChangePage={handleChangePage}
         itemsPerPage={itemsPerPage}
         totalPages={totalPages}
+        isAdmin={isAdmin} // Pasar la prop isAdmin
       />
 
       {/* Dialog */}

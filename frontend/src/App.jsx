@@ -65,40 +65,41 @@ function App() {
             }
           />
 
-          {/* Rutas solo para admin */}
+          {/* Rutas para todos los usuarios autenticados (ver sin editar para empleados) */}
           <Route
             path="/almacenes"
             element={
-              <AdminRoute>
+              <ProtectedRoute>
                 <DashboardLayout>
                   <Almacenes />
                 </DashboardLayout>
-              </AdminRoute>
+              </ProtectedRoute>
             }
           />
 
           <Route
             path="/categorias"
             element={
-              <AdminRoute>
+              <ProtectedRoute>
                 <DashboardLayout>
                   <Categorias />
                 </DashboardLayout>
-              </AdminRoute>
+              </ProtectedRoute>
             }
           />
 
           <Route
             path="/proveedores"
             element={
-              <AdminRoute>
+              <ProtectedRoute>
                 <DashboardLayout>
                   <Proveedores />
                 </DashboardLayout>
-              </AdminRoute>
+              </ProtectedRoute>
             }
           />
 
+          {/* Rutas solo para admin */}
           <Route
             path="/usuarios"
             element={

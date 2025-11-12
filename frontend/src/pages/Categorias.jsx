@@ -13,7 +13,7 @@ import CategoriaTable from "../components/CategoriaTable";
 import CategoriaDialog from "../components/CategoriaDialog";
 
 function Categorias() {
-  const { authFetch } = useAuth();
+  const { authFetch, isAdmin } = useAuth(); // Agregar isAdmin
   const [categorias, setCategorias] = useState([]);
   const [loading, setLoading] = useState(true);
   const [openDialog, setOpenDialog] = useState(false);
@@ -39,7 +39,18 @@ function Categorias() {
       const res = await authFetch("/categorias");
       if (!res.ok) throw new Error("Error al cargar categorías");
       const data = await res.json();
-      setCategorias(data);
+
+      // Si es admin, cargar también las categorías inactivas
+      let allCategorias = data;
+      if (isAdmin) {
+        const resBorrados = await authFetch("/categorias/borrados");
+        if (resBorrados.ok) {
+          const dataBorrados = await resBorrados.json();
+          allCategorias = [...data, ...dataBorrados];
+        }
+      }
+
+      setCategorias(allCategorias);
     } catch (error) {
       setError("Error al cargar categorías");
       console.error("Error:", error);
@@ -136,6 +147,23 @@ function Categorias() {
     }
   };
 
+  const handleRestore = async (id) => {
+    if (!window.confirm("¿Está seguro de restaurar esta categoría?")) return;
+
+    try {
+      const res = await authFetch(`/categorias/restaurar/${id}`, {
+        method: "PUT",
+      });
+      if (!res.ok) throw new Error("Error al restaurar categoría");
+
+      setSuccess("Categoría restaurada correctamente");
+      await cargarCategorias();
+      setTimeout(() => setSuccess(""), 3000);
+    } catch (error) {
+      setError(error.message);
+    }
+  };
+
   if (loading) {
     return (
       <Box
@@ -169,17 +197,21 @@ function Categorias() {
             Categorías
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Gestiona las categorías de productos
+            {isAdmin
+              ? "Gestiona las categorías de productos"
+              : "Visualiza las categorías de productos"}
           </Typography>
         </Box>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={() => handleOpenDialog()}
-          sx={{ borderRadius: 2 }}
-        >
-          Nueva Categoría
-        </Button>
+        {isAdmin && (
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={() => handleOpenDialog()}
+            sx={{ borderRadius: 2 }}
+          >
+            Nueva Categoría
+          </Button>
+        )}
       </Box>
 
       {/* Mensajes */}
@@ -203,19 +235,23 @@ function Categorias() {
         totalPages={totalPages}
         handleOpenDialog={handleOpenDialog}
         handleDelete={handleDelete}
+        handleRestore={handleRestore}
+        isAdmin={isAdmin} // Pasar la prop isAdmin
       />
 
-      {/* Dialog */}
-      <CategoriaDialog
-        open={openDialog}
-        onClose={handleCloseDialog}
-        formData={formData}
-        onChange={handleChange}
-        onSubmit={handleSubmit}
-        editingId={editingId}
-        error={error}
-        success={success}
-      />
+      {/* Dialog - solo para admin */}
+      {isAdmin && (
+        <CategoriaDialog
+          open={openDialog}
+          onClose={handleCloseDialog}
+          formData={formData}
+          onChange={handleChange}
+          onSubmit={handleSubmit}
+          editingId={editingId}
+          error={error}
+          success={success}
+        />
+      )}
     </Container>
   );
 }

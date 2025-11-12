@@ -13,7 +13,7 @@ import AlmacenTable from "../components/AlmacenTable";
 import AlmacenDialog from "../components/AlmacenDialog";
 
 function Almacenes() {
-  const { authFetch } = useAuth();
+  const { authFetch, isAdmin } = useAuth(); // Agregar isAdmin
   const [almacenes, setAlmacenes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [openDialog, setOpenDialog] = useState(false);
@@ -39,7 +39,18 @@ function Almacenes() {
       const res = await authFetch("/almacenes");
       if (!res.ok) throw new Error("Error al cargar almacenes");
       const data = await res.json();
-      setAlmacenes(data);
+
+      // Si es admin, cargar también los almacenes inactivos
+      let allAlmacenes = data;
+      if (isAdmin) {
+        const resBorrados = await authFetch("/almacenes/borrados");
+        if (resBorrados.ok) {
+          const dataBorrados = await resBorrados.json();
+          allAlmacenes = [...data, ...dataBorrados];
+        }
+      }
+
+      setAlmacenes(allAlmacenes);
     } catch (error) {
       setError("Error al cargar almacenes");
       console.error("Error:", error);
@@ -136,6 +147,23 @@ function Almacenes() {
     }
   };
 
+  const handleRestore = async (id) => {
+    if (!window.confirm("¿Está seguro de restaurar este almacén?")) return;
+
+    try {
+      const res = await authFetch(`/almacenes/restaurar/${id}`, {
+        method: "PUT",
+      });
+      if (!res.ok) throw new Error("Error al restaurar almacén");
+
+      setSuccess("Almacén restaurado correctamente");
+      await cargarAlmacenes();
+      setTimeout(() => setSuccess(""), 3000);
+    } catch (error) {
+      setError(error.message);
+    }
+  };
+
   if (loading) {
     return (
       <Box
@@ -169,17 +197,21 @@ function Almacenes() {
             Almacenes
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Gestiona los almacenes del sistema
+            {isAdmin
+              ? "Gestiona los almacenes del sistema"
+              : "Visualiza los almacenes del sistema"}
           </Typography>
         </Box>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={() => handleOpenDialog()}
-          sx={{ borderRadius: 2 }}
-        >
-          Nuevo Almacén
-        </Button>
+        {isAdmin && (
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={() => handleOpenDialog()}
+            sx={{ borderRadius: 2 }}
+          >
+            Nuevo Almacén
+          </Button>
+        )}
       </Box>
 
       {/* Mensajes */}
@@ -203,19 +235,23 @@ function Almacenes() {
         totalPages={totalPages}
         handleOpenDialog={handleOpenDialog}
         handleDelete={handleDelete}
+        handleRestore={handleRestore}
+        isAdmin={isAdmin} // Pasar la prop isAdmin
       />
 
-      {/* Dialog */}
-      <AlmacenDialog
-        open={openDialog}
-        onClose={handleCloseDialog}
-        formData={formData}
-        onChange={handleChange}
-        onSubmit={handleSubmit}
-        editingId={editingId}
-        error={error}
-        success={success}
-      />
+      {/* Dialog - solo para admin */}
+      {isAdmin && (
+        <AlmacenDialog
+          open={openDialog}
+          onClose={handleCloseDialog}
+          formData={formData}
+          onChange={handleChange}
+          onSubmit={handleSubmit}
+          editingId={editingId}
+          error={error}
+          success={success}
+        />
+      )}
     </Container>
   );
 }

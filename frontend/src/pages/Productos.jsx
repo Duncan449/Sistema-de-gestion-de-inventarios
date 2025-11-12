@@ -13,7 +13,7 @@ import ProductoTable from "../components/ProductoTable";
 import ProductoDialog from "../components/ProductoDialog";
 
 function Productos() {
-  const { authFetch, isAdmin } = useAuth();
+  const { authFetch, isAdmin } = useAuth(); // isAdmin ya existía pero ahora se usa consistentemente
   const [productos, setProductos] = useState([]);
   const [categorias, setCategorias] = useState([]);
   const [proveedores, setProveedores] = useState([]);
@@ -22,7 +22,6 @@ function Productos() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  // Nuevos estados que faltaban 👇
   const [formData, setFormData] = useState({
     codigo: "",
     nombre: "",
@@ -48,7 +47,18 @@ function Productos() {
       const resProductos = await authFetch("/productos");
       if (!resProductos.ok) throw new Error("Error al cargar productos");
       const dataProductos = await resProductos.json();
-      setProductos(dataProductos);
+
+      // Si es admin, cargar también los productos inactivos
+      let allProductos = dataProductos;
+      if (isAdmin) {
+        const resBorrados = await authFetch("/productos/borrados");
+        if (resBorrados.ok) {
+          const dataBorrados = await resBorrados.json();
+          allProductos = [...dataProductos, ...dataBorrados];
+        }
+      }
+
+      setProductos(allProductos);
 
       const resCategorias = await authFetch("/categorias");
       if (resCategorias.ok) setCategorias(await resCategorias.json());
@@ -163,6 +173,23 @@ function Productos() {
     }
   };
 
+  const handleRestore = async (id) => {
+    if (!window.confirm("¿Está seguro de restaurar este producto?")) return;
+
+    try {
+      const res = await authFetch(`/productos/restaurar/${id}`, {
+        method: "PUT",
+      });
+      if (!res.ok) throw new Error("Error al restaurar producto");
+
+      setSuccess("Producto restaurado correctamente");
+      await cargarDatos();
+      setTimeout(() => setSuccess(""), 3000);
+    } catch (error) {
+      setError(error.message);
+    }
+  };
+
   if (loading) {
     return (
       <Box
@@ -177,6 +204,7 @@ function Productos() {
       </Box>
     );
   }
+
   const totalPages = Math.ceil(productos.length / itemsPerPage);
 
   return (
@@ -195,7 +223,9 @@ function Productos() {
             Productos
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Gestiona y visualiza todos tus productos
+            {isAdmin
+              ? "Gestiona y visualiza todos tus productos"
+              : "Visualiza todos los productos"}
           </Typography>
         </Box>
         {isAdmin && (
@@ -222,30 +252,35 @@ function Productos() {
         </Alert>
       )}
 
+      {/* Tabla */}
       <ProductoTable
         productos={productos}
         categorias={categorias}
-        isAdmin={isAdmin}
+        isAdmin={isAdmin} // Pasar la prop isAdmin
         handleOpenDialog={handleOpenDialog}
         handleDelete={handleDelete}
+        handleRestore={handleRestore}
         page={page}
         handleChangePage={handleChangePage}
         itemsPerPage={itemsPerPage}
         totalPages={totalPages}
       />
 
-      <ProductoDialog
-        open={openDialog}
-        onClose={handleCloseDialog}
-        formData={formData}
-        onChange={handleChange}
-        onSubmit={handleSubmit}
-        categorias={categorias}
-        proveedores={proveedores}
-        editingId={editingId}
-        error={error}
-        success={success}
-      />
+      {/* Dialog - solo para admin */}
+      {isAdmin && (
+        <ProductoDialog
+          open={openDialog}
+          onClose={handleCloseDialog}
+          formData={formData}
+          onChange={handleChange}
+          onSubmit={handleSubmit}
+          categorias={categorias}
+          proveedores={proveedores}
+          editingId={editingId}
+          error={error}
+          success={success}
+        />
+      )}
     </Container>
   );
 }

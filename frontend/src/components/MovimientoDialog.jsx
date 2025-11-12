@@ -144,7 +144,6 @@ function MovimientoDialog({
                 fullWidth
                 multiline
                 rows={3}
-                helperText="Describa el motivo del movimiento"
               />
             </Grid>
           </Grid>

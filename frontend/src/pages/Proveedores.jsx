@@ -13,7 +13,7 @@ import ProveedorTable from "../components/ProveedorTable";
 import ProveedorDialog from "../components/ProveedorDialog";
 
 function Proveedores() {
-  const { authFetch } = useAuth();
+  const { authFetch, isAdmin } = useAuth(); // Agregar isAdmin
   const [proveedores, setProveedores] = useState([]);
   const [loading, setLoading] = useState(true);
   const [openDialog, setOpenDialog] = useState(false);
@@ -42,7 +42,18 @@ function Proveedores() {
       const res = await authFetch("/proveedores");
       if (!res.ok) throw new Error("Error al cargar proveedores");
       const data = await res.json();
-      setProveedores(data);
+
+      // Si es admin, cargar también los proveedores inactivos
+      let allProveedores = data;
+      if (isAdmin) {
+        const resBorrados = await authFetch("/proveedores/borrados");
+        if (resBorrados.ok) {
+          const dataBorrados = await resBorrados.json();
+          allProveedores = [...data, ...dataBorrados];
+        }
+      }
+
+      setProveedores(allProveedores);
     } catch (error) {
       setError("Error al cargar proveedores");
       console.error("Error:", error);
@@ -145,6 +156,23 @@ function Proveedores() {
     }
   };
 
+  const handleRestore = async (id) => {
+    if (!window.confirm("¿Está seguro de restaurar este proveedor?")) return;
+
+    try {
+      const res = await authFetch(`/proveedores/restaurar/${id}`, {
+        method: "PUT",
+      });
+      if (!res.ok) throw new Error("Error al restaurar proveedor");
+
+      setSuccess("Proveedor restaurado correctamente");
+      await cargarProveedores();
+      setTimeout(() => setSuccess(""), 3000);
+    } catch (error) {
+      setError(error.message);
+    }
+  };
+
   if (loading) {
     return (
       <Box
@@ -178,17 +206,21 @@ function Proveedores() {
             Proveedores
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Gestiona los proveedores del sistema
+            {isAdmin
+              ? "Gestiona los proveedores del sistema"
+              : "Visualiza los proveedores del sistema"}
           </Typography>
         </Box>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={() => handleOpenDialog()}
-          sx={{ borderRadius: 2 }}
-        >
-          Nuevo Proveedor
-        </Button>
+        {isAdmin && (
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={() => handleOpenDialog()}
+            sx={{ borderRadius: 2 }}
+          >
+            Nuevo Proveedor
+          </Button>
+        )}
       </Box>
 
       {/* Mensajes */}
@@ -212,19 +244,23 @@ function Proveedores() {
         totalPages={totalPages}
         handleOpenDialog={handleOpenDialog}
         handleDelete={handleDelete}
+        handleRestore={handleRestore}
+        isAdmin={isAdmin} // Pasar la prop isAdmin
       />
 
-      {/* Dialog */}
-      <ProveedorDialog
-        open={openDialog}
-        onClose={handleCloseDialog}
-        formData={formData}
-        onChange={handleChange}
-        onSubmit={handleSubmit}
-        editingId={editingId}
-        error={error}
-        success={success}
-      />
+      {/* Dialog - solo para admin */}
+      {isAdmin && (
+        <ProveedorDialog
+          open={openDialog}
+          onClose={handleCloseDialog}
+          formData={formData}
+          onChange={handleChange}
+          onSubmit={handleSubmit}
+          editingId={editingId}
+          error={error}
+          success={success}
+        />
+      )}
     </Container>
   );
 }

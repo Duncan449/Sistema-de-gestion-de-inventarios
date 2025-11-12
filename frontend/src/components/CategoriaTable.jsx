@@ -11,11 +11,12 @@ import {
   Box,
   Pagination,
   Paper,
+  Tooltip,
 } from "@mui/material";
 import {
   Edit as EditIcon,
   Delete as DeleteIcon,
-  Category as CategoryIcon,
+  Restore as RestoreIcon,
 } from "@mui/icons-material";
 
 function CategoriaTable({
@@ -26,6 +27,8 @@ function CategoriaTable({
   handleChangePage,
   handleOpenDialog,
   handleDelete,
+  handleRestore,
+  isAdmin, // Nueva prop
 }) {
   const startIndex = (page - 1) * itemsPerPage;
   const categoriasActuales = categorias.slice(
@@ -42,14 +45,14 @@ function CategoriaTable({
               <TableCell>Nombre</TableCell>
               <TableCell>Descripción</TableCell>
               <TableCell>Fecha Creación</TableCell>
-              <TableCell align="center">Estado</TableCell>
-              <TableCell align="center">Acciones</TableCell>
+              {isAdmin && <TableCell align="center">Estado</TableCell>}
+              {isAdmin && <TableCell align="center">Acciones</TableCell>}
             </TableRow>
           </TableHead>
           <TableBody>
             {categoriasActuales.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} align="center">
+                <TableCell colSpan={isAdmin ? 5 : 3} align="center">
                   <Typography color="text.secondary" py={3}>
                     No hay categorías registradas
                   </Typography>
@@ -60,14 +63,32 @@ function CategoriaTable({
                 <TableRow
                   key={categoria.id}
                   hover
-                  sx={{ "&:last-child td": { border: 0 } }}
+                  sx={{
+                    "&:last-child td": { border: 0 },
+                    opacity: categoria.activa ? 1 : 0.6,
+                    backgroundColor: categoria.activa
+                      ? "transparent"
+                      : "action.hover",
+                  }}
                 >
-                  <TableCell>
+                  <TableCell
+                    sx={{
+                      textDecoration: categoria.activa
+                        ? "none"
+                        : "line-through",
+                    }}
+                  >
                     <Typography fontWeight="medium">
                       {categoria.nombre}
                     </Typography>
                   </TableCell>
-                  <TableCell>
+                  <TableCell
+                    sx={{
+                      textDecoration: categoria.activa
+                        ? "none"
+                        : "line-through",
+                    }}
+                  >
                     <Typography
                       variant="body2"
                       color="text.secondary"
@@ -81,32 +102,55 @@ function CategoriaTable({
                       {categoria.descripcion || "-"}
                     </Typography>
                   </TableCell>
-                  <TableCell>
+                  <TableCell
+                    sx={{
+                      textDecoration: categoria.activa
+                        ? "none"
+                        : "line-through",
+                    }}
+                  >
                     <Typography variant="body2">
                       {categoria.fecha_creacion || "N/A"}
                     </Typography>
                   </TableCell>
-                  <TableCell align="center">
-                    <Chip
-                      label={categoria.activa ? "Activa" : "Inactiva"}
-                      color={categoria.activa ? "success" : "error"}
-                      size="small"
-                    />
-                  </TableCell>
-                  <TableCell align="center">
-                    <IconButton
-                      color="primary"
-                      onClick={() => handleOpenDialog(categoria)}
-                    >
-                      <EditIcon fontSize="small" />
-                    </IconButton>
-                    <IconButton
-                      color="error"
-                      onClick={() => handleDelete(categoria.id)}
-                    >
-                      <DeleteIcon fontSize="small" />
-                    </IconButton>
-                  </TableCell>
+                  {isAdmin && (
+                    <TableCell align="center">
+                      <Chip
+                        label={categoria.activa ? "Activa" : "Inactiva"}
+                        color={categoria.activa ? "success" : "error"}
+                        size="small"
+                      />
+                    </TableCell>
+                  )}
+                  {isAdmin && (
+                    <TableCell align="center">
+                      {categoria.activa ? (
+                        <>
+                          <IconButton
+                            color="primary"
+                            onClick={() => handleOpenDialog(categoria)}
+                          >
+                            <EditIcon fontSize="small" />
+                          </IconButton>
+                          <IconButton
+                            color="error"
+                            onClick={() => handleDelete(categoria.id)}
+                          >
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        </>
+                      ) : (
+                        <Tooltip title="Restaurar categoría">
+                          <IconButton
+                            color="success"
+                            onClick={() => handleRestore(categoria.id)}
+                          >
+                            <RestoreIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      )}
+                    </TableCell>
+                  )}
                 </TableRow>
               ))
             )}

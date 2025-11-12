@@ -29,13 +29,21 @@ async def get_movimiento_by_id(
 
 # CRUD MOVIMIENTOS INVENTARIO
 
-async def get_all_movimientos(usuario_actual) -> List[MovimientoInventarioOut]: # GET - Trae todos los movimientos de inventario
+async def get_all_movimientos(usuario_actual) -> List[dict]: # GET - Trae todos los movimientos de inventario con nombre de usuario
     
     if usuario_actual["rol"] != "admin":
         raise HTTPException(status_code=403, detail="No tienes permiso para ver los movimientos de inventario")
     
     try:
-        query = "SELECT * FROM movimientos_inventario ORDER BY fecha_movimiento DESC"
+        
+        query = """
+            SELECT 
+                mi.*,
+                u.nombre AS nombre_usuario
+            FROM movimientos_inventario mi
+            LEFT JOIN usuarios u ON mi.fk_usuario = u.id
+            ORDER BY mi.fecha_movimiento DESC
+        """
         rows = await db.fetch_all(query=query)
         return rows
 
@@ -45,19 +53,25 @@ async def get_all_movimientos(usuario_actual) -> List[MovimientoInventarioOut]: 
             status_code=500, detail=f"Error al obtener movimientos: {e}"
         )
 
-async def get_movimientos_por_usuario(fk_usuario: int, usuario_actual) -> List[MovimientoInventarioOut]: # GET - Trae todos los movimientos de inventario de un usuario específico - Para que un usuario vea sus propios movimientos
+async def get_movimientos_por_usuario(fk_usuario: int, usuario_actual) -> List[dict]: # GET - Trae todos los movimientos de inventario de un usuario específico con nombre
    
     if usuario_actual["rol"] != "admin" and usuario_actual["id"] != fk_usuario:  # Solo admin o el mismo usuario pueden ver sus movimientos
         raise HTTPException(status_code=403, detail="No tienes permiso para ver los movimientos de este usuario")
 
     try:
+        
         query = """
-            SELECT * FROM movimientos_inventario 
-            WHERE fk_usuario = :fk_usuario 
-            ORDER BY fecha_movimiento DESC
+            SELECT 
+                mi.*,
+                u.nombre AS nombre_usuario
+            FROM movimientos_inventario mi 
+            LEFT JOIN usuarios u ON mi.fk_usuario = u.id
+            WHERE mi.fk_usuario = :fk_usuario 
+            ORDER BY mi.fecha_movimiento DESC
         """
         rows = await db.fetch_all(query=query, values={"fk_usuario": fk_usuario})
         return rows
+        
 
     except Exception as e:
         print(f"Error al obtener movimientos del usuario {fk_usuario}: {e}")

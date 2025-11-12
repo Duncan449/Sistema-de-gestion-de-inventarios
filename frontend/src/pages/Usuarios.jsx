@@ -13,7 +13,7 @@ import UsuarioTable from "../components/UsuarioTable";
 import UsuarioDialog from "../components/UsuarioDialog";
 
 function Usuarios() {
-  const { authFetch, user } = useAuth();
+  const { authFetch, user, isAdmin } = useAuth();
   const [usuarios, setUsuarios] = useState([]);
   const [loading, setLoading] = useState(true);
   const [openDialog, setOpenDialog] = useState(false);
@@ -40,7 +40,18 @@ function Usuarios() {
       const res = await authFetch("/usuarios");
       if (!res.ok) throw new Error("Error al cargar usuarios");
       const data = await res.json();
-      setUsuarios(data);
+
+      // Si es admin, cargar también los usuarios inactivos
+      let allUsuarios = data;
+      if (isAdmin) {
+        const resBorrados = await authFetch("/usuarios/borrados");
+        if (resBorrados.ok) {
+          const dataBorrados = await resBorrados.json();
+          allUsuarios = [...data, ...dataBorrados];
+        }
+      }
+
+      setUsuarios(allUsuarios);
     } catch (error) {
       setError("Error al cargar usuarios");
       console.error("Error:", error);
@@ -156,6 +167,23 @@ function Usuarios() {
     }
   };
 
+  const handleRestore = async (id) => {
+    if (!window.confirm("¿Está seguro de restaurar este usuario?")) return;
+
+    try {
+      const res = await authFetch(`/usuarios/restaurar/${id}`, {
+        method: "PUT",
+      });
+      if (!res.ok) throw new Error("Error al restaurar usuario");
+
+      setSuccess("Usuario restaurado correctamente");
+      await cargarUsuarios();
+      setTimeout(() => setSuccess(""), 3000);
+    } catch (error) {
+      setError(error.message);
+    }
+  };
+
   if (loading) {
     return (
       <Box
@@ -223,7 +251,9 @@ function Usuarios() {
         totalPages={totalPages}
         handleOpenDialog={handleOpenDialog}
         handleDelete={handleDelete}
+        handleRestore={handleRestore}
         currentUserId={user?.id}
+        isAdmin={isAdmin}
       />
 
       {/* Dialog */}
