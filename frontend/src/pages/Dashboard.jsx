@@ -33,11 +33,52 @@ function Dashboard() {
   }, [isAdmin]);
 
   const cargarProductos = async () => {
+    // Helper para parsear fechas con formato dd/mm/YYYY HH:MM:SS
+    const parseFecha = (fechaStr) => {
+      if (!fechaStr) return null;
+      // esperar formato 'DD/MM/YYYY HH:MM:SS'
+      const [datePart, timePart] = fechaStr.split(" ");
+      if (!datePart) return null;
+      const [dd, mm, yyyy] = datePart.split("/");
+      const [hh = "0", min = "0", ss = "0"] = (timePart || "").split(":");
+      const iso = `${yyyy.padStart(4, "0")}-${(mm || "").padStart(2, "0")}-${(
+        dd || ""
+      ).padStart(2, "0")}T${(hh || "0").padStart(2, "0")}:${(
+        min || "0"
+      ).padStart(2, "0")}:${(ss || "0").padStart(2, "0")}`;
+      const d = new Date(iso);
+      return isNaN(d.getTime()) ? null : d;
+    };
+
     try {
       const res = await authFetch("/productos");
       if (!res.ok) throw new Error("Error al cargar productos");
       const data = await res.json();
-      setProductos(data);
+
+      // Si es admin, también intentar obtener los productos borrados y combinarlos
+      let all = data;
+      try {
+        const resBorrados = await authFetch("/productos/borrados");
+        if (resBorrados.ok) {
+          const dataB = await resBorrados.json();
+          // Evitar duplicados: usar id como clave (en caso de datos inconsistentes)
+          const map = new Map();
+          [...data, ...dataB].forEach((p) => map.set(p.id, p));
+          all = Array.from(map.values());
+        }
+      } catch (err) {
+        // si falla la carga de borrados, seguimos con los activos
+        console.warn("No se pudieron cargar productos borrados:", err);
+      }
+
+      // Ordenar por fecha_creacion descendente (los sin fecha al final)
+      all.sort((a, b) => {
+        const da = parseFecha(a.fecha_creacion) || new Date(0);
+        const db = parseFecha(b.fecha_creacion) || new Date(0);
+        return db - da;
+      });
+
+      setProductos(all);
     } catch (error) {
       console.error("Error:", error);
     } finally {

@@ -45,6 +45,11 @@ function StockAlmacen() {
     cargarDatosSegunTab();
   }, [tabValue, selectedProductoId, selectedAlmacenId]);
 
+  // Resetear página cuando cambia el selector (evita quedar en página alta sin resultados)
+  useEffect(() => {
+    setPage(1);
+  }, [selectedProductoId, selectedAlmacenId]);
+
   const [page, setPage] = useState(1);
   const itemsPerPage = 5;
 
@@ -201,16 +206,30 @@ function StockAlmacen() {
       <Box>
         {tabValue === 0 && (
           <StockDetalladoTable
-            stock={stockDetallado}
-            isAdmin={false} //SIEMPRE false para ocultar botones de editar
-            handleOpenDialog={() => {}} // Función vacía, no se usa
+            stock={stockDetallado.slice(
+              (page - 1) * itemsPerPage,
+              (page - 1) * itemsPerPage + itemsPerPage
+            )}
+            isAdmin={false}
+            handleOpenDialog={() => {}}
+            page={page}
+            totalItems={stockDetallado.length}
+            itemsPerPage={itemsPerPage}
+            onChangePage={handleChangePage}
           />
         )}
 
         {tabValue === 1 && (
           <StockPorProductoTable
-            stock={stockPorProducto}
+            stock={stockPorProducto.slice(
+              (page - 1) * itemsPerPage,
+              (page - 1) * itemsPerPage + itemsPerPage
+            )}
             productos={productos}
+            page={page}
+            totalItems={stockPorProducto.length}
+            itemsPerPage={itemsPerPage}
+            onChangePage={handleChangePage}
           />
         )}
 
@@ -219,9 +238,16 @@ function StockAlmacen() {
             almacenes={almacenes}
             selectedAlmacenId={selectedAlmacenId}
             setSelectedAlmacenId={setSelectedAlmacenId}
-            stock={stockPorAlmacen}
-            isAdmin={false} //SIEMPRE false para ocultar botones de editar
-            handleOpenDialog={() => {}} // Función vacía, no se usa
+            stock={stockPorAlmacen.slice(
+              (page - 1) * itemsPerPage,
+              (page - 1) * itemsPerPage + itemsPerPage
+            )}
+            isAdmin={false}
+            handleOpenDialog={() => {}}
+            page={page}
+            totalItems={stockPorAlmacen.length}
+            itemsPerPage={itemsPerPage}
+            onChangePage={handleChangePage}
           />
         )}
 
@@ -230,9 +256,16 @@ function StockAlmacen() {
             productos={productos}
             selectedProductoId={selectedProductoId}
             setSelectedProductoId={setSelectedProductoId}
-            stock={stockConProducto}
-            isAdmin={false} //SIEMPRE false para ocultar botones de editar
-            handleOpenDialog={() => {}} // Función vacía, no se usa
+            stock={stockConProducto.slice(
+              (page - 1) * itemsPerPage,
+              (page - 1) * itemsPerPage + itemsPerPage
+            )}
+            isAdmin={false}
+            handleOpenDialog={() => {}}
+            page={page}
+            totalItems={stockConProducto.length}
+            itemsPerPage={itemsPerPage}
+            onChangePage={handleChangePage}
           />
         )}
       </Box>
