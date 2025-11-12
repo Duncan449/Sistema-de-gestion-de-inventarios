@@ -11,6 +11,7 @@ import {
   TextField,
   MenuItem,
   IconButton,
+  Pagination,
 } from "@mui/material";
 import {
   Warehouse as WarehouseIcon,
@@ -24,6 +25,10 @@ function StockPorAlmacenSelector({
   stock,
   isAdmin,
   handleOpenDialog,
+  page = 1,
+  totalItems = 0,
+  itemsPerPage = 5,
+  onChangePage,
 }) {
   return (
     <Box>
@@ -114,6 +119,17 @@ function StockPorAlmacenSelector({
               </TableBody>
             </Table>
           </TableContainer>
+
+          {totalItems > itemsPerPage && (
+            <Box sx={{ display: "flex", justifyContent: "center", p: 3 }}>
+              <Pagination
+                count={Math.ceil(totalItems / itemsPerPage)}
+                page={page}
+                onChange={onChangePage}
+                color="primary"
+              />
+            </Box>
+          )}
         </Paper>
       )}
     </Box>

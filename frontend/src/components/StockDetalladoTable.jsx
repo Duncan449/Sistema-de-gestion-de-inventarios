@@ -9,10 +9,20 @@ import {
   Typography,
   Chip,
   IconButton,
+  Box,
+  Pagination,
 } from "@mui/material";
 import { Edit as EditIcon } from "@mui/icons-material";
 
-function StockDetalladoTable({ stock, isAdmin, handleOpenDialog }) {
+function StockDetalladoTable({
+  stock,
+  isAdmin,
+  handleOpenDialog,
+  page = 1,
+  totalItems = 0,
+  itemsPerPage = 5,
+  onChangePage,
+}) {
   return (
     <Paper sx={{ borderRadius: 2, overflow: "hidden" }}>
       <TableContainer>
@@ -76,6 +86,17 @@ function StockDetalladoTable({ stock, isAdmin, handleOpenDialog }) {
           </TableBody>
         </Table>
       </TableContainer>
+
+      {totalItems > itemsPerPage && (
+        <Box sx={{ display: "flex", justifyContent: "center", p: 3 }}>
+          <Pagination
+            count={Math.ceil(totalItems / itemsPerPage)}
+            page={page}
+            onChange={onChangePage}
+            color="primary"
+          />
+        </Box>
+      )}
     </Paper>
   );
 }

@@ -7,9 +7,18 @@ import {
   TableHead,
   TableRow,
   Typography,
+  Box,
+  Pagination,
 } from "@mui/material";
 
-function StockPorProductoTable({ stock, productos }) {
+function StockPorProductoTable({
+  stock,
+  productos,
+  page = 1,
+  totalItems = 0,
+  itemsPerPage = 5,
+  onChangePage,
+}) {
   const getProductoNombre = (fk_producto) => {
     const producto = productos.find((p) => p.id === fk_producto);
     return producto ? producto.nombre : "Desconocido";
@@ -55,6 +64,17 @@ function StockPorProductoTable({ stock, productos }) {
           </TableBody>
         </Table>
       </TableContainer>
+
+      {totalItems > itemsPerPage && (
+        <Box sx={{ display: "flex", justifyContent: "center", p: 3 }}>
+          <Pagination
+            count={Math.ceil(totalItems / itemsPerPage)}
+            page={page}
+            onChange={onChangePage}
+            color="primary"
+          />
+        </Box>
+      )}
     </Paper>
   );
 }
