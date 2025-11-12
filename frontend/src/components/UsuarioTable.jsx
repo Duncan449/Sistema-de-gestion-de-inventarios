@@ -11,8 +11,13 @@ import {
   Box,
   Pagination,
   Paper,
+  Tooltip,
 } from "@mui/material";
-import { Edit as EditIcon, Delete as DeleteIcon } from "@mui/icons-material";
+import {
+  Edit as EditIcon,
+  Delete as DeleteIcon,
+  Restore as RestoreIcon,
+} from "@mui/icons-material";
 
 function UsuarioTable({
   usuarios,
@@ -22,7 +27,9 @@ function UsuarioTable({
   handleChangePage,
   handleOpenDialog,
   handleDelete,
+  handleRestore,
   currentUserId,
+  isAdmin,
 }) {
   const startIndex = (page - 1) * itemsPerPage;
   const usuariosActuales = usuarios.slice(
@@ -64,19 +71,37 @@ function UsuarioTable({
                 <TableRow
                   key={usuario.id}
                   hover
-                  sx={{ "&:last-child td": { border: 0 } }}
+                  sx={{
+                    "&:last-child td": { border: 0 },
+                    opacity: usuario.activo ? 1 : 0.6,
+                    backgroundColor: usuario.activo
+                      ? "transparent"
+                      : "action.hover",
+                  }}
                 >
-                  <TableCell>
+                  <TableCell
+                    sx={{
+                      textDecoration: usuario.activo ? "none" : "line-through",
+                    }}
+                  >
                     <Typography fontWeight="medium">
                       {usuario.nombre}
                     </Typography>
                   </TableCell>
-                  <TableCell>
+                  <TableCell
+                    sx={{
+                      textDecoration: usuario.activo ? "none" : "line-through",
+                    }}
+                  >
                     <Typography variant="body2" color="text.secondary">
                       {usuario.email}
                     </Typography>
                   </TableCell>
-                  <TableCell>
+                  <TableCell
+                    sx={{
+                      textDecoration: usuario.activo ? "none" : "line-through",
+                    }}
+                  >
                     <Chip
                       label={
                         usuario.rol === "admin" ? "Administrador" : "Empleado"
@@ -86,12 +111,20 @@ function UsuarioTable({
                       variant="outlined"
                     />
                   </TableCell>
-                  <TableCell>
+                  <TableCell
+                    sx={{
+                      textDecoration: usuario.activo ? "none" : "line-through",
+                    }}
+                  >
                     <Typography variant="body2">
                       {formatearFecha(usuario.fecha_creacion)}
                     </Typography>
                   </TableCell>
-                  <TableCell>
+                  <TableCell
+                    sx={{
+                      textDecoration: usuario.activo ? "none" : "line-through",
+                    }}
+                  >
                     <Typography variant="body2">
                       {formatearFecha(usuario.fecha_ultima_sesion)}
                     </Typography>
@@ -104,19 +137,34 @@ function UsuarioTable({
                     />
                   </TableCell>
                   <TableCell align="center">
-                    <IconButton
-                      color="primary"
-                      onClick={() => handleOpenDialog(usuario)}
-                    >
-                      <EditIcon fontSize="small" />
-                    </IconButton>
-                    {usuario.id !== currentUserId && (
-                      <IconButton
-                        color="error"
-                        onClick={() => handleDelete(usuario.id)}
-                      >
-                        <DeleteIcon fontSize="small" />
-                      </IconButton>
+                    {usuario.activo ? (
+                      <>
+                        <IconButton
+                          color="primary"
+                          onClick={() => handleOpenDialog(usuario)}
+                        >
+                          <EditIcon fontSize="small" />
+                        </IconButton>
+                        {usuario.id !== currentUserId && (
+                          <IconButton
+                            color="error"
+                            onClick={() => handleDelete(usuario.id)}
+                          >
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        )}
+                      </>
+                    ) : (
+                      isAdmin && (
+                        <Tooltip title="Restaurar usuario">
+                          <IconButton
+                            color="success"
+                            onClick={() => handleRestore(usuario.id)}
+                          >
+                            <RestoreIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      )
                     )}
                   </TableCell>
                 </TableRow>

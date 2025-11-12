@@ -24,6 +24,7 @@ class MovimientoInventarioOut(BaseModel):
     fk_usuario: int
     fk_proveedor: int | None = None
     fecha_movimiento: datetime | None = None
+    nombre_usuario: str| None = None
 
     class Config:
         json_encoders = {

@@ -73,7 +73,7 @@ function Sidebar({ handleLogout }) {
           <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
             <SidebarButton
               icon={<DashboardIcon />}
-              label="Dashboard"
+              label="Inicio"
               onClick={() => navigate("/dashboard")}
             />
             <SidebarButton
@@ -92,29 +92,30 @@ function Sidebar({ handleLogout }) {
               onClick={() => navigate("/movimientos")}
             />
 
+            {/* Estas opciones ahora están disponibles para todos */}
+            <SidebarButton
+              icon={<WarehouseIcon />}
+              label="Almacenes"
+              onClick={() => navigate("/almacenes")}
+            />
+            <SidebarButton
+              icon={<CategoryIcon />}
+              label="Categorías"
+              onClick={() => navigate("/categorias")}
+            />
+            <SidebarButton
+              icon={<PeopleIcon />}
+              label="Proveedores"
+              onClick={() => navigate("/proveedores")}
+            />
+
+            {/* Solo admin ve Usuarios */}
             {isAdmin && (
-              <>
-                <SidebarButton
-                  icon={<WarehouseIcon />}
-                  label="Almacenes"
-                  onClick={() => navigate("/almacenes")}
-                />
-                <SidebarButton
-                  icon={<CategoryIcon />}
-                  label="Categorías"
-                  onClick={() => navigate("/categorias")}
-                />
-                <SidebarButton
-                  icon={<PeopleIcon />}
-                  label="Proveedores"
-                  onClick={() => navigate("/proveedores")}
-                />
-                <SidebarButton
-                  icon={<ManageAccountsIcon />}
-                  label="Usuarios"
-                  onClick={() => navigate("/usuarios")}
-                />
-              </>
+              <SidebarButton
+                icon={<ManageAccountsIcon />}
+                label="Usuarios"
+                onClick={() => navigate("/usuarios")}
+              />
             )}
           </Box>
         </Container>

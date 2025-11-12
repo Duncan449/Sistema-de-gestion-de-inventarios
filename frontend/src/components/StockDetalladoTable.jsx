@@ -23,14 +23,13 @@ function StockDetalladoTable({ stock, isAdmin, handleOpenDialog }) {
               <TableCell>Almacén</TableCell>
               <TableCell align="right">Disponible</TableCell>
               <TableCell align="right">Reservada</TableCell>
-              <TableCell align="right">Total</TableCell>
               {isAdmin && <TableCell align="center">Acciones</TableCell>}
             </TableRow>
           </TableHead>
           <TableBody>
             {stock.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={isAdmin ? 6 : 5} align="center">
+                <TableCell colSpan={isAdmin ? 5 : 4} align="center">
                   <Typography color="text.secondary" py={3}>
                     No hay stock registrado
                   </Typography>
@@ -59,11 +58,7 @@ function StockDetalladoTable({ stock, isAdmin, handleOpenDialog }) {
                       {item.total_reservada}
                     </Typography>
                   </TableCell>
-                  <TableCell align="right">
-                    <Typography fontWeight="bold" color="primary">
-                      {item.total_disponible + item.total_reservada}
-                    </Typography>
-                  </TableCell>
+
                   {isAdmin && (
                     <TableCell align="center">
                       <IconButton

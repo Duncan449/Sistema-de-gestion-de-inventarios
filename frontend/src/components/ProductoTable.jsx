@@ -12,11 +12,12 @@ import {
   Box,
   Pagination,
   Paper,
+  Tooltip,
 } from "@mui/material";
 import {
   Edit as EditIcon,
   Delete as DeleteIcon,
-  Inventory as InventoryIcon,
+  Restore as RestoreIcon,
 } from "@mui/icons-material";
 
 function ProductoTable({
@@ -28,7 +29,8 @@ function ProductoTable({
   handleChangePage,
   handleOpenDialog,
   handleDelete,
-  isAdmin,
+  handleRestore,
+  isAdmin, // Prop existente pero ahora se usa correctamente
 }) {
   const startIndex = (page - 1) * itemsPerPage;
   const productosActuales = productos.slice(
@@ -47,14 +49,14 @@ function ProductoTable({
               <TableCell>Categoría</TableCell>
               <TableCell align="right">Precio Compra</TableCell>
               <TableCell align="right">Precio Venta</TableCell>
-              <TableCell align="center">Estado</TableCell>
-              <TableCell align="center">Acciones</TableCell>
+              {isAdmin && <TableCell align="center">Estado</TableCell>}
+              {isAdmin && <TableCell align="center">Acciones</TableCell>}
             </TableRow>
           </TableHead>
           <TableBody>
             {productosActuales.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} align="center">
+                <TableCell colSpan={isAdmin ? 7 : 5} align="center">
                   <Typography color="text.secondary" py={3}>
                     No hay productos registrados
                   </Typography>
@@ -65,10 +67,26 @@ function ProductoTable({
                 <TableRow
                   key={producto.id}
                   hover
-                  sx={{ "&:last-child td": { border: 0 } }}
+                  sx={{
+                    "&:last-child td": { border: 0 },
+                    opacity: producto.activo ? 1 : 0.6,
+                    backgroundColor: producto.activo
+                      ? "transparent"
+                      : "action.hover",
+                  }}
                 >
-                  <TableCell>{producto.codigo}</TableCell>
-                  <TableCell>
+                  <TableCell
+                    sx={{
+                      textDecoration: producto.activo ? "none" : "line-through",
+                    }}
+                  >
+                    {producto.codigo}
+                  </TableCell>
+                  <TableCell
+                    sx={{
+                      textDecoration: producto.activo ? "none" : "line-through",
+                    }}
+                  >
                     <Typography fontWeight="medium">
                       {producto.nombre}
                     </Typography>
@@ -82,7 +100,11 @@ function ProductoTable({
                       </Typography>
                     )}
                   </TableCell>
-                  <TableCell>
+                  <TableCell
+                    sx={{
+                      textDecoration: producto.activo ? "none" : "line-through",
+                    }}
+                  >
                     <Chip
                       label={
                         categorias.find((c) => c.id === producto.fk_categoria)
@@ -92,39 +114,63 @@ function ProductoTable({
                       variant="outlined"
                     />
                   </TableCell>
-                  <TableCell align="right">
+                  <TableCell
+                    align="right"
+                    sx={{
+                      textDecoration: producto.activo ? "none" : "line-through",
+                    }}
+                  >
                     ${producto.precio_compra.toFixed(2)}
                   </TableCell>
-                  <TableCell align="right" color="primary">
+                  <TableCell
+                    align="right"
+                    sx={{
+                      textDecoration: producto.activo ? "none" : "line-through",
+                    }}
+                    color="primary"
+                  >
                     <Typography fontWeight="bold" color="primary">
                       ${producto.precio_venta.toFixed(2)}
                     </Typography>
                   </TableCell>
-                  <TableCell align="center">
-                    <Chip
-                      label={producto.activo ? "Activo" : "Inactivo"}
-                      color={producto.activo ? "success" : "error"}
-                      size="small"
-                    />
-                  </TableCell>
-                  <TableCell align="center">
-                    {isAdmin && (
-                      <>
-                        <IconButton
-                          color="primary"
-                          onClick={() => handleOpenDialog(producto)}
-                        >
-                          <EditIcon fontSize="small" />
-                        </IconButton>
-                        <IconButton
-                          color="error"
-                          onClick={() => handleDelete(producto.id)}
-                        >
-                          <DeleteIcon fontSize="small" />
-                        </IconButton>
-                      </>
-                    )}
-                  </TableCell>
+                  {isAdmin && (
+                    <TableCell align="center">
+                      <Chip
+                        label={producto.activo ? "Activo" : "Inactivo"}
+                        color={producto.activo ? "success" : "error"}
+                        size="small"
+                      />
+                    </TableCell>
+                  )}
+                  {isAdmin && (
+                    <TableCell align="center">
+                      {producto.activo ? (
+                        <>
+                          <IconButton
+                            color="primary"
+                            onClick={() => handleOpenDialog(producto)}
+                          >
+                            <EditIcon fontSize="small" />
+                          </IconButton>
+                          <IconButton
+                            color="error"
+                            onClick={() => handleDelete(producto.id)}
+                          >
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        </>
+                      ) : (
+                        <Tooltip title="Restaurar producto">
+                          <IconButton
+                            color="success"
+                            onClick={() => handleRestore(producto.id)}
+                          >
+                            <RestoreIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      )}
+                    </TableCell>
+                  )}
                 </TableRow>
               ))
             )}

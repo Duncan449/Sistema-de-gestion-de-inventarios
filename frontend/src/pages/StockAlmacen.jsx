@@ -4,30 +4,24 @@ import {
   Box,
   Container,
   Typography,
-  Button,
   Alert,
   CircularProgress,
   Tabs,
   Tab,
   Paper,
 } from "@mui/material";
-import { Add as AddIcon } from "@mui/icons-material";
 import StockDetalladoTable from "../components/StockDetalladoTable";
 import StockPorProductoTable from "../components/StockPorProductoTable";
 import StockPorAlmacenSelector from "../components/StockPorAlmacenSelector";
 import StockProductoSelector from "../components/StockProductoSelector";
-import StockDialog from "../components/StockDialog";
 
 function StockAlmacen() {
-  const { authFetch, isAdmin } = useAuth();
+  const { authFetch } = useAuth();
 
   // Estados principales
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
   const [tabValue, setTabValue] = useState(0);
-  const [openDialog, setOpenDialog] = useState(false);
-  const [editingId, setEditingId] = useState(null);
 
   // Datos
   const [stockDetallado, setStockDetallado] = useState([]);
@@ -43,14 +37,6 @@ function StockAlmacen() {
   const [selectedProductoId, setSelectedProductoId] = useState("");
   const [selectedAlmacenId, setSelectedAlmacenId] = useState("");
 
-  // Formulario
-  const [formData, setFormData] = useState({
-    fk_producto: "",
-    fk_almacen: "",
-    cantidad_disponible: "",
-    cantidad_reservada: "",
-  });
-
   useEffect(() => {
     cargarDatosIniciales();
   }, []);
@@ -58,6 +44,9 @@ function StockAlmacen() {
   useEffect(() => {
     cargarDatosSegunTab();
   }, [tabValue, selectedProductoId, selectedAlmacenId]);
+
+  const [page, setPage] = useState(1);
+  const itemsPerPage = 5;
 
   const cargarDatosIniciales = async () => {
     setLoading(true);
@@ -148,77 +137,11 @@ function StockAlmacen() {
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);
     setError("");
-    setSuccess("");
+    setPage(1); // ⭐ RESETEAR A PÁGINA 1
   };
 
-  const handleOpenDialog = (stock = null) => {
-    if (stock) {
-      setFormData({
-        fk_producto: stock.fk_producto,
-        fk_almacen: stock.fk_almacen,
-        cantidad_disponible: stock.cantidad_disponible,
-        cantidad_reservada: stock.cantidad_reservada,
-      });
-      setEditingId(stock.id);
-    } else {
-      setFormData({
-        fk_producto: "",
-        fk_almacen: "",
-        cantidad_disponible: "",
-        cantidad_reservada: "",
-      });
-      setEditingId(null);
-    }
-    setOpenDialog(true);
-    setError("");
-    setSuccess("");
-  };
-
-  const handleCloseDialog = () => {
-    setOpenDialog(false);
-    setEditingId(null);
-    setError("");
-  };
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
-    setSuccess("");
-
-    try {
-      const url = editingId ? `/stock_almacen/${editingId}` : "/stock_almacen";
-      const method = editingId ? "PUT" : "POST";
-
-      const res = await authFetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
-
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.detail || "Error al guardar stock");
-      }
-
-      setSuccess(
-        editingId
-          ? "Stock actualizado correctamente"
-          : "Stock creado correctamente"
-      );
-
-      await cargarDatosSegunTab();
-
-      setTimeout(() => {
-        handleCloseDialog();
-      }, 1500);
-    } catch (error) {
-      setError(error.message);
-    }
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
   };
 
   if (loading) {
@@ -239,43 +162,19 @@ function StockAlmacen() {
   return (
     <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
       {/* Header */}
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          mb: 4,
-        }}
-      >
-        <Box>
-          <Typography variant="h4" fontWeight="bold" gutterBottom>
-            Stock de Almacen
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Gestiona el inventario en todos los almacenes
-          </Typography>
-        </Box>
-        {isAdmin && (
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => handleOpenDialog()}
-            sx={{ borderRadius: 2 }}
-          >
-            Nuevo Stock
-          </Button>
-        )}
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="h4" fontWeight="bold" gutterBottom>
+          Stock de Almacén
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          Visualiza el inventario en todos los almacenes
+        </Typography>
       </Box>
 
-      {/* Mensajes */}
+      {/* Mensajes de error */}
       {error && (
         <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError("")}>
           {error}
-        </Alert>
-      )}
-      {success && (
-        <Alert severity="success" sx={{ mb: 3 }} onClose={() => setSuccess("")}>
-          {success}
         </Alert>
       )}
 
@@ -303,8 +202,8 @@ function StockAlmacen() {
         {tabValue === 0 && (
           <StockDetalladoTable
             stock={stockDetallado}
-            isAdmin={isAdmin}
-            handleOpenDialog={handleOpenDialog}
+            isAdmin={false} //SIEMPRE false para ocultar botones de editar
+            handleOpenDialog={() => {}} // Función vacía, no se usa
           />
         )}
 
@@ -321,8 +220,8 @@ function StockAlmacen() {
             selectedAlmacenId={selectedAlmacenId}
             setSelectedAlmacenId={setSelectedAlmacenId}
             stock={stockPorAlmacen}
-            isAdmin={isAdmin}
-            handleOpenDialog={handleOpenDialog}
+            isAdmin={false} //SIEMPRE false para ocultar botones de editar
+            handleOpenDialog={() => {}} // Función vacía, no se usa
           />
         )}
 
@@ -332,25 +231,11 @@ function StockAlmacen() {
             selectedProductoId={selectedProductoId}
             setSelectedProductoId={setSelectedProductoId}
             stock={stockConProducto}
-            isAdmin={isAdmin}
-            handleOpenDialog={handleOpenDialog}
+            isAdmin={false} //SIEMPRE false para ocultar botones de editar
+            handleOpenDialog={() => {}} // Función vacía, no se usa
           />
         )}
       </Box>
-
-      {/* Dialog */}
-      <StockDialog
-        open={openDialog}
-        onClose={handleCloseDialog}
-        formData={formData}
-        onChange={handleChange}
-        onSubmit={handleSubmit}
-        productos={productos}
-        almacenes={almacenes}
-        editingId={editingId}
-        error={error}
-        success={success}
-      />
     </Container>
   );
 }

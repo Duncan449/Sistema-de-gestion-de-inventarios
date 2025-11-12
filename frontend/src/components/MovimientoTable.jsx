@@ -20,6 +20,7 @@ function MovimientoTable({
   totalPages,
   itemsPerPage,
   handleChangePage,
+  isAdmin, // Nueva prop para determinar si mostrar columna Usuario
 }) {
   const startIndex = (page - 1) * itemsPerPage;
   const movimientosActuales = movimientos.slice(
@@ -68,6 +69,7 @@ function MovimientoTable({
               <TableCell align="right">Cantidad</TableCell>
               <TableCell align="right">Stock Anterior</TableCell>
               <TableCell align="right">Stock Nuevo</TableCell>
+              {isAdmin && <TableCell>Usuario</TableCell>} {/* Nueva columna */}
               <TableCell>Motivo</TableCell>
               <TableCell>Fecha</TableCell>
             </TableRow>
@@ -75,7 +77,7 @@ function MovimientoTable({
           <TableBody>
             {movimientosActuales.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={9} align="center">
+                <TableCell colSpan={isAdmin ? 9 : 8} align="center">
                   <Typography color="text.secondary" py={3}>
                     No hay movimientos registrados
                   </Typography>
@@ -83,7 +85,7 @@ function MovimientoTable({
               </TableRow>
             ) : (
               movimientosActuales.map((movimiento) => (
-                <TableRow>
+                <TableRow key={movimiento.id}>
                   <TableCell>
                     <Typography fontWeight="medium">
                       {getProductoNombre(movimiento.fk_producto)}
@@ -116,6 +118,13 @@ function MovimientoTable({
                       {movimiento.cantidad_nueva}
                     </Typography>
                   </TableCell>
+                  {isAdmin && (
+                    <TableCell>
+                      <Typography variant="body2" fontWeight="medium">
+                        {movimiento.nombre_usuario || "No disponible"}
+                      </Typography>
+                    </TableCell>
+                  )}
                   <TableCell>
                     <Typography
                       variant="body2"
